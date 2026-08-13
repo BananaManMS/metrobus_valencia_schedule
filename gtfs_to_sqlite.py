@@ -1,11 +1,7 @@
 """
 Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
-lo filtra a la provincia de Valencia mediante bounding box, y genera un
-SQLite.
-
-shapes.txt se ignora deliberadamente (geometría de mapa, no la usa la app
-y es la mayor parte del peso del feed) — ni se descarga su contenido al
-DataFrame en memoria más de lo necesario.
+carga todos los calendarios, rutas y paradas, y genera metrobus.sqlite
+de forma completa sin descartar paradas intermedias ni cabeceras.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -26,13 +22,12 @@ GTFS_URL = (
 )
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Bounding box aproximado de la provincia de Valencia (WGS84)
-LAT_MIN, LAT_MAX = 38.75, 39.90
-LON_MIN, LON_MAX = -1.60, -0.05
+# Bounding box amplio para abarcar toda la red interurbana sin recortar zonas limítrofes
+LAT_MIN, LAT_MAX = 37.50, 41.00
+LON_MIN, LON_MAX = -2.50, 1.00
 
 REQUIRED_FILES = [
     "agency.txt",
-    "calendar_dates.txt",
     "routes.txt",
     "stops.txt",
     "stop_times.txt",
@@ -49,8 +44,10 @@ def download_gtfs() -> zipfile.ZipFile:
 
 
 def load(zf: zipfile.ZipFile, name: str) -> pd.DataFrame:
-    with zf.open(name) as f:
-        return pd.read_csv(f, dtype=str, keep_default_na=False)
+    if name in zf.namelist():
+        with zf.open(name) as f:
+            return pd.read_csv(f, dtype=str, keep_default_na=False)
+    return pd.DataFrame()
 
 
 def main():
@@ -58,7 +55,7 @@ def main():
 
     missing = [f for f in REQUIRED_FILES if f not in zf.namelist()]
     if missing:
-        raise SystemExit(f"Faltan archivos en el GTFS descargado: {missing}")
+        raise SystemExit(f"Faltan archivos esenciales en el GTFS descargado: {missing}")
 
     print("Cargando GTFS…")
     agency = load(zf, "agency.txt")
@@ -66,52 +63,54 @@ def main():
     trips = load(zf, "trips.txt")
     stop_times = load(zf, "stop_times.txt")
     stops = load(zf, "stops.txt")
+    calendar = load(zf, "calendar.txt")
     calendar_dates = load(zf, "calendar_dates.txt")
 
-    # --- 1. Filtrar paradas dentro del bounding box de la provincia ---
-    stops["stop_lat"] = pd.to_numeric(stops["stop_lat"], errors="coerce")
-    stops["stop_lon"] = pd.to_numeric(stops["stop_lon"], errors="coerce")
+    # --- 1. Validar coordenadas de paradas ---
+    stops["stop_lat_num"] = pd.to_numeric(stops["stop_lat"], errors="coerce")
+    stops["stop_lon_num"] = pd.to_numeric(stops["stop_lon"], errors="coerce")
 
+    # Mantenemos las paradas dentro del rango geográfico regional
     stops_in_box = stops[
-        stops["stop_lat"].between(LAT_MIN, LAT_MAX)
-        & stops["stop_lon"].between(LON_MIN, LON_MAX)
+        stops["stop_lat_num"].between(LAT_MIN, LAT_MAX)
+        & stops["stop_lon_num"].between(LON_MIN, LON_MAX)
     ].copy()
-    print(f"Paradas totales: {len(stops)} → dentro del bbox: {len(stops_in_box)}")
+    stops_in_box.drop(columns=["stop_lat_num", "stop_lon_num"], inplace=True)
+
+    print(f"Paradas en el GTFS original: {len(stops)} → válidas: {len(stops_in_box)}")
 
     valid_stop_ids = set(stops_in_box["stop_id"])
 
-    # --- 2. Filtrar stop_times a esas paradas ---
-    stop_times_f = stop_times[stop_times["stop_id"].isin(valid_stop_ids)].copy()
-    print(f"stop_times totales: {len(stop_times)} → filtrados: {len(stop_times_f)}")
+    # --- 2. Buscar expediciones (trips) que pasen por esas paradas ---
+    stop_times_initial = stop_times[stop_times["stop_id"].isin(valid_stop_ids)]
+    valid_trip_ids = set(stop_times_initial["trip_id"])
 
-    # --- 3. Filtrar trips que tengan al menos una parada dentro del bbox ---
-    valid_trip_ids = set(stop_times_f["trip_id"])
+    # --- 3. MANTENER TODAS LAS PARADAS DE ESAS EXPEDICIONES ---
+    # (Para no romper rutas que salen o entran a Valencia)
+    stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
     trips_f = trips[trips["trip_id"].isin(valid_trip_ids)].copy()
-    print(f"trips totales: {len(trips)} → filtrados: {len(trips_f)}")
 
-    # --- 4. Filtrar routes usadas por esos trips ---
+    # --- 4. Recuperar todas las paradas requeridas (incluyendo estaciones padre) ---
+    final_stop_ids = set(stop_times_f["stop_id"])
+    if "parent_station" in stops.columns:
+        parents = set(stops[stops["stop_id"].isin(final_stop_ids)]["parent_station"])
+        parents.discard("")
+        final_stop_ids.update(parents)
+
+    stops_f = stops[stops["stop_id"].isin(final_stop_ids)].copy()
+
+    # --- 5. Filtrar rutas, agencias y calendarios asociados ---
     valid_route_ids = set(trips_f["route_id"])
     routes_f = routes[routes["route_id"].isin(valid_route_ids)].copy()
-    print(f"routes totales: {len(routes)} → filtradas: {len(routes_f)}")
 
-    # --- 5. Filtrar agency usada por esas routes ---
     valid_agency_ids = set(routes_f["agency_id"]) if "agency_id" in routes_f.columns else set()
     agency_f = agency[agency["agency_id"].isin(valid_agency_ids)].copy() if valid_agency_ids else agency.copy()
-    print(f"agencies totales: {len(agency)} → filtradas: {len(agency_f)}")
 
-    # --- 6. Re-filtrar stop_times a solo los trips finales (por si algún  ---
-    #        trip quedó fuera al filtrar routes/agency)
-    stop_times_f = stop_times_f[stop_times_f["trip_id"].isin(trips_f["trip_id"])]
-
-    # --- 7. Re-filtrar stops a los realmente usados en stop_times final ---
-    final_stop_ids = set(stop_times_f["stop_id"])
-    stops_f = stops_in_box[stops_in_box["stop_id"].isin(final_stop_ids)].copy()
-
-    # --- 8. calendar_dates: solo servicios usados por los trips filtrados ---
     valid_service_ids = set(trips_f["service_id"])
-    calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy()
+    calendar_f = calendar[calendar["service_id"].isin(valid_service_ids)].copy() if not calendar.empty else calendar
+    calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
-    # --- 9. Volcar a SQLite ---
+    # --- 6. Volcar a SQLite ---
     if OUTPUT_DB.exists():
         OUTPUT_DB.unlink()
 
@@ -122,22 +121,27 @@ def main():
     trips_f.to_sql("trips", conn, index=False)
     stops_f.to_sql("stops", conn, index=False)
     stop_times_f.to_sql("stop_times", conn, index=False)
-    calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
-    # Índices para consultas rápidas ("próximas salidas por parada")
+    if not calendar_f.empty:
+        calendar_f.to_sql("calendar", conn, index=False)
+    if not calendar_dates_f.empty:
+        calendar_dates_f.to_sql("calendar_dates", conn, index=False)
+
+    # Crear índices para acelerar consultas de la API
     conn.executescript("""
-        CREATE INDEX idx_stop_times_stop_id ON stop_times(stop_id);
-        CREATE INDEX idx_stop_times_trip_id ON stop_times(trip_id);
-        CREATE INDEX idx_trips_route_id ON trips(route_id);
-        CREATE INDEX idx_trips_service_id ON trips(service_id);
-        CREATE INDEX idx_routes_agency_id ON routes(agency_id);
-        CREATE INDEX idx_calendar_dates_service_id ON calendar_dates(service_id);
+        CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);
+        CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);
+        CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);
+        CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);
+        CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);
+        CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);
     """)
     conn.commit()
     conn.close()
 
     size_mb = OUTPUT_DB.stat().st_size / (1024 * 1024)
-    print(f"\nListo → {OUTPUT_DB} ({size_mb:.1f} MB)")
+    print(f"\n¡Base de datos generada con éxito! → {OUTPUT_DB} ({size_mb:.1f} MB)")
+    print(f"Total paradas procesadas e importadas: {len(stops_f)}")
 
 
 if __name__ == "__main__":
