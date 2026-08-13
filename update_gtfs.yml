@@ -1,0 +1,40 @@
+name: Actualizar API de Metrobús
+
+on:
+  schedule:
+    # Se ejecuta cada día a las 21:00 UTC (equivale a las 23:00 hora peninsular española en horario de verano / 22:00 en invierno)
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas
+
+      - name: Ejecutar script de procesamiento GTFS
+        run: python process_gtfs.py
+
+      - name: Commit y Push de los nuevos JSON
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Actualización diaria de horarios y paradas Metrobús"
+          branch: main
+          # Al poner 'docs/', el commit registrará automáticamente cualquier archivo eliminado o creado en esa carpeta
+          file_pattern: 'docs/'
