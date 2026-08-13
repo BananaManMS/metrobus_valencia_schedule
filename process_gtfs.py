@@ -8,17 +8,15 @@ from pathlib import Path
 def clean_gtfs_df(filepath):
     """Lee un CSV limpiando espacios fantasma y caracteres invisibles (BOM) de la GVA"""
     df = pd.read_csv(filepath, dtype=str)
-    # Limpiar cabeceras
     df.columns = df.columns.str.strip().str.replace('\ufeff', '')
-    # Limpiar todas las celdas
     for col in df.columns:
         df[col] = df[col].astype(str).str.strip()
     return df
 
 def process_gva_gtfs():
-    print("Iniciando procesamiento de GTFS local...")
+    print("Iniciando procesamiento de GTFS local con IDs de agencia explícitos...")
     
-    # 1. Limpiar directorio docs 
+    # 1. Limpiar directorio docs
     output_dir = Path("docs")
     if output_dir.exists():
         shutil.rmtree(output_dir)
@@ -37,41 +35,34 @@ def process_gva_gtfs():
         
     data_path = Path("gtfs_temp")
 
-    # 3. Leer y desinfectar archivos TXT
-    print("Leyendo y limpiando archivos TXT...")
-    agency = clean_gtfs_df(data_path / 'agency.txt')
+    # 3. Leer y desinfectar archivos TXT base
+    print("Leyendo archivos TXT...")
     routes = clean_gtfs_df(data_path / 'routes.txt')
     trips = clean_gtfs_df(data_path / 'trips.txt')
     stop_times = clean_gtfs_df(data_path / 'stop_times.txt')
     stops = clean_gtfs_df(data_path / 'stops.txt')
 
-    # --- FASE 2: Filtrado ATMV (Corrección de error de IDs de la GVA) ---
-    print("Filtrando datos para ATMV (Metrobús)...")
-    
-    # Buscar filas de Metrobús en TODAS las columnas por si han bailado los datos
-    mask = agency.apply(lambda row: row.astype(str).str.contains('metgovalencia', case=False).any(), axis=1)
-    valid_agency_rows = agency[mask]
-    
-    # Guardar tanto el agency_id como el agency_name para esquivar el error de la GVA
-    possible_ids = valid_agency_rows['agency_id'].tolist()
-    if 'agency_name' in valid_agency_rows.columns:
-        possible_ids.extend(valid_agency_rows['agency_name'].tolist())
-    
-    print(f"Buscando rutas vinculadas a los IDs detectados...")
+    # --- PASO 1 y 2: Filtrado por lista explícita de agency_id ---
+    print("Paso 1 y 2: Filtrando rutas mediante la lista blanca de agencias...")
+    explicit_agency_ids = [
+        '5904', '2358515851', '5910', '2545579951', 
+        '1901190601', '1620431001', '9259', '2089140751', 
+        '2211835201', '2274119701', '2509810701', '5202'
+    ]
 
-    valid_routes = routes[routes['agency_id'].isin(possible_ids)]
-    valid_trips = trips[trips['route_id'].isin(valid_routes['route_id'])]
-    valid_stop_times = stop_times[stop_times['trip_id'].isin(valid_trips['trip_id'])]
-    valid_stop_ids = valid_stop_times['stop_id'].unique().tolist()
-    valid_stops = stops[stops['stop_id'].isin(valid_stop_ids)]
-    print(f"Total paradas limpias a procesar: {len(valid_stops)}")
+    valid_routes = routes[routes['agency_id'].isin(explicit_agency_ids)]
+    valid_route_ids = valid_routes['route_id'].unique()
+    print(f"Rutas válidas encontradas: {len(valid_route_ids)}")
 
-    # --- FASE 3: Traducción de fechas ---
-    print("Buscando días de operación...")
+    # --- PASO 3: Buscar en trips.txt los service_id y trip_id ---
+    print("Paso 3: Extrayendo viajes (trips) asociados a las rutas...")
+    valid_trips = trips[trips['route_id'].isin(valid_route_ids)]
+    
+    # --- PASO 4: Traducir días de operación usando calendar_dates.txt / calendar.txt ---
+    print("Paso 4: Mapeando service_id a días de la semana...")
     day_names = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
     service_days = {}
-    
-    # Algunas líneas pueden estar en calendar.txt en lugar de dates
+
     if (data_path / 'calendar.txt').exists():
         calendar = clean_gtfs_df(data_path / 'calendar.txt')
         day_cols = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -91,7 +82,6 @@ def process_gva_gtfs():
             (calendar_dates['service_id'].isin(valid_services)) & 
             (calendar_dates['exception_type'] == '1')
         ]
-        
         for _, row in valid_calendar.iterrows():
             s_id = row['service_id']
             date_str = row['date']
@@ -103,11 +93,19 @@ def process_gva_gtfs():
                 service_days[s_id].add(day_name)
             except Exception:
                 pass
-            
-    # --- FASE 4: Cruce final y agrupación ---
-    print("Cruzando información de líneas y paradas...")
+
+    # --- PASO 5: Consultar stop_times.txt con el trip_id ---
+    print("Paso 5: Consultando stop_times para obtener paradas, horas de salida y secuencias...")
+    valid_trip_ids = valid_trips['trip_id'].unique()
+    valid_stop_times = stop_times[stop_times['trip_id'].isin(valid_trip_ids)].copy()
+    
     merged_data = valid_stop_times.merge(valid_trips[['trip_id', 'route_id', 'service_id']], on='trip_id')
     merged_data = merged_data.merge(valid_routes[['route_id', 'route_short_name']], on='route_id')
+
+    # --- PASO 6: Asociar con stops.txt para obtener los datos finales de la parada ---
+    print("Paso 6: Asociando con stops.txt y generando los JSON finales...")
+    valid_stop_ids = valid_stop_times['stop_id'].unique()
+    valid_stops = stops[stops['stop_id'].isin(valid_stop_ids)]
 
     stops_global_list = []
     days_order = {"Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7, "Días no especificados": 8}
@@ -120,8 +118,8 @@ def process_gva_gtfs():
             stop_lat = float(stop_row['stop_lat'])
             stop_lon = float(stop_row['stop_lon'])
         except:
-            continue # Saltar paradas sin coordenadas válidas
-        
+            continue
+            
         stop_records = merged_data[merged_data['stop_id'] == stop_id]
         lines_dict = {}
         
@@ -130,7 +128,6 @@ def process_gva_gtfs():
             s_id = record['service_id']
             operating_days = service_days.get(s_id, set())
             
-            # Si la GVA no ha puesto horarios para esta línea, la salvamos igualmente
             if not operating_days:
                 operating_days = set(["Días no especificados"])
                 
@@ -148,16 +145,16 @@ def process_gva_gtfs():
             
         formatted_lines = sorted(formatted_lines, key=lambda x: x['line'])
         
-        # Generar JSON Global con el nombre de las líneas
+        # Guardar en el índice global
         stops_global_list.append({
             "id": stop_id,
             "name": stop_name,
             "lat": stop_lat,
             "lon": stop_lon,
-            "lines": [line_data['line'] for line_data in formatted_lines] 
+            "lines": [line_data['line'] for line_data in formatted_lines]
         })
         
-        # Generar JSON Individual
+        # Guardar el JSON individual de la parada
         stop_detail_json = {
             "id": stop_id,
             "name": stop_name,
@@ -171,14 +168,14 @@ def process_gva_gtfs():
             json.dump(stop_detail_json, f, ensure_ascii=False, separators=(',', ':'))
 
     # Guardar el JSON global index
-    print("Generando listado global...")
+    print("Generando listado global (stops_index.json)...")
     with open(output_dir / 'stops_index.json', 'w', encoding='utf-8') as f:
         json.dump(stops_global_list, f, ensure_ascii=False, separators=(',', ':'))
         
     print("Limpiando archivos temporales...")
     shutil.rmtree("gtfs_temp", ignore_errors=True)
         
-    print("Proceso completado con éxito. Archivos guardados en 'docs/'")
+    print("¡Proceso completado con éxito usando los IDs de agencia definidos!")
 
 if __name__ == "__main__":
     process_gva_gtfs()
