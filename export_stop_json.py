@@ -39,6 +39,61 @@ def main():
         FROM stops
     """).fetchall()
 
+    # Algunas columnas de GTFS son opcionales (p.ej. trip_headsign,
+    # route_color) y este feed concreto puede no traerlas. Comprobamos
+    # qué columnas existen realmente antes de construir la consulta,
+    # para no romper si faltan.
+    trips_cols = {row[1] for row in conn.execute("PRAGMA table_info(trips)")}
+    routes_cols = {row[1] for row in conn.execute("PRAGMA table_info(routes)")}
+    agency_cols = {row[1] for row in conn.execute("PRAGMA table_info(agency)")}
+
+    trip_headsign_expr = "t.trip_headsign" if "trip_headsign" in trips_cols else "NULL"
+    route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "NULL"
+    route_long_expr = "r.route_long_name" if "route_long_name" in routes_cols else "NULL"
+    route_color_expr = "r.route_color" if "route_color" in routes_cols else "NULL"
+    agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
+    has_headsign = "trip_headsign" in trips_cols
+
+    if not has_headsign:
+        print("Aviso: el GTFS no trae trip_headsign — se usará el nombre "
+              "de la última parada de cada trip como destino.")
+        # última parada de cada trip (mayor stop_sequence), para usar su
+        # nombre como destino cuando no hay trip_headsign
+        conn.execute("""
+            CREATE TEMP TABLE trip_last_stop AS
+            SELECT st.trip_id, s.stop_name AS last_stop_name
+            FROM stop_times st
+            JOIN stops s ON s.stop_id = st.stop_id
+            WHERE st.stop_sequence = (
+                SELECT MAX(st2.stop_sequence)
+                FROM stop_times st2
+                WHERE st2.trip_id = st.trip_id
+            )
+        """)
+        trip_headsign_expr = "COALESCE(t.trip_headsign, tls.last_stop_name)" \
+            if "trip_headsign" in trips_cols else "tls.last_stop_name"
+
+    departures_sql = f"""
+        SELECT
+            st.departure_time,
+            st.stop_sequence,
+            t.trip_id,
+            {trip_headsign_expr} AS trip_headsign,
+            t.service_id,
+            r.route_id,
+            {route_short_expr} AS route_short_name,
+            {route_long_expr} AS route_long_name,
+            {route_color_expr} AS route_color,
+            {agency_name_expr} AS agency_name
+        FROM stop_times st
+        JOIN trips t   ON t.trip_id = st.trip_id
+        JOIN routes r  ON r.route_id = t.route_id
+        LEFT JOIN agency a ON a.agency_id = r.agency_id
+        {"LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id" if not has_headsign else ""}
+        WHERE st.stop_id = ?
+        ORDER BY st.departure_time
+    """
+
     print(f"Generando JSON para {len(stops)} paradas…")
 
     stops_index = []
@@ -46,25 +101,7 @@ def main():
     for stop in stops:
         stop_id = stop["stop_id"]
 
-        departures = conn.execute("""
-            SELECT
-                st.departure_time,
-                st.stop_sequence,
-                t.trip_id,
-                t.trip_headsign,
-                t.service_id,
-                r.route_id,
-                r.route_short_name,
-                r.route_long_name,
-                r.route_color,
-                a.agency_name
-            FROM stop_times st
-            JOIN trips t   ON t.trip_id = st.trip_id
-            JOIN routes r  ON r.route_id = t.route_id
-            LEFT JOIN agency a ON a.agency_id = r.agency_id
-            WHERE st.stop_id = ?
-            ORDER BY st.departure_time
-        """, (stop_id,)).fetchall()
+        departures = conn.execute(departures_sql, (stop_id,)).fetchall()
 
         stop_json = {
             "stop_id": stop_id,
