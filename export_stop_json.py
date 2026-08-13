@@ -1,9 +1,6 @@
 """
 Genera un archivo JSON por cada parada a partir de metrobus.sqlite,
-listo para servirse como API estática con GitHub Pages.
-
-Limpia automáticamente la carpeta docs/stops antes de cada ejecución
-para eliminar paradas obsoletas o huérfanas.
+uniendo las salidas de paradas padre e hijo para evitar JSONs vacíos.
 """
 
 import json
@@ -21,13 +18,11 @@ def main():
     if not DB_PATH.exists():
         raise SystemExit(f"❌ No se encuentra {DB_PATH} — ejecuta antes gtfs_to_sqlite.py")
 
-    # 1. Elimina la carpeta docs/stops si existe para borrar archivos antiguos/obsoletos
     if OUTPUT_DIR.exists():
         shutil.rmtree(OUTPUT_DIR)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 2. Asegura la creación de .nojekyll para GitHub Pages
     if not NOJEKYLL_PATH.exists():
         NOJEKYLL_PATH.touch()
 
@@ -39,7 +34,6 @@ def main():
         FROM stops
     """).fetchall()
 
-    # Comprobaciones de tablas y columnas en SQLite
     tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     trips_cols = {row[1] for row in conn.execute("PRAGMA table_info(trips)")} if "trips" in tables else set()
     routes_cols = {row[1] for row in conn.execute("PRAGMA table_info(routes)")} if "routes" in tables else set()
@@ -49,16 +43,14 @@ def main():
     has_headsign = "trip_headsign" in trips_cols
     has_calendar = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}.issubset(calendar_cols)
 
-    trip_headsign_expr = "t.trip_headsign" if "trip_headsign" in trips_cols else "NULL"
     route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "NULL"
     route_long_expr = "r.route_long_name" if "route_long_name" in routes_cols else "NULL"
     route_color_expr = "r.route_color" if "route_color" in routes_cols else "NULL"
     agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
 
     if not has_headsign:
-        print("Aviso: el GTFS no trae trip_headsign — se usará el nombre de la última parada de cada trip como destino.")
         conn.execute("""
-            CREATE TEMP TABLE trip_last_stop AS
+            CREATE TEMP TABLE IF NOT EXISTS trip_last_stop AS
             SELECT st.trip_id, s.stop_name AS last_stop_name
             FROM stop_times st
             JOIN stops s ON s.stop_id = st.stop_id
@@ -69,8 +61,9 @@ def main():
             )
         """)
         trip_headsign_expr = "COALESCE(t.trip_headsign, tls.last_stop_name)" if "trip_headsign" in trips_cols else "tls.last_stop_name"
+    else:
+        trip_headsign_expr = "t.trip_headsign"
 
-    # COALESCE para evitar que NULL deshabilite días de autobús
     calendar_select = """
         COALESCE(c.monday, 1) AS monday,
         COALESCE(c.tuesday, 1) AS tuesday,
@@ -85,8 +78,9 @@ def main():
 
     calendar_join = "LEFT JOIN calendar c ON c.service_id = t.service_id" if has_calendar else ""
 
+    # CLAVE: Busca salidas de la propia parada O de sus andenes/postes hijos (parent_station)
     departures_sql = f"""
-        SELECT
+        SELECT DISTINCT
             st.departure_time,
             st.stop_sequence,
             t.trip_id,
@@ -104,7 +98,7 @@ def main():
         LEFT JOIN agency a ON a.agency_id = r.agency_id
         {calendar_join}
         {"LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id" if not has_headsign else ""}
-        WHERE st.stop_id = ?
+        WHERE st.stop_id = ? OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)
         ORDER BY st.departure_time
     """
 
@@ -115,7 +109,8 @@ def main():
     for stop in stops:
         stop_id = str(stop["stop_id"]).strip()
 
-        departures = conn.execute(departures_sql, (stop_id,)).fetchall()
+        # Pasamos stop_id dos veces: una para st.stop_id y otra para parent_station
+        departures = conn.execute(departures_sql, (stop_id, stop_id)).fetchall()
 
         stop_json = {
             "stop_id": stop_id,
@@ -168,7 +163,7 @@ def main():
     conn.close()
 
     total_size = sum(f.stat().st_size for f in OUTPUT_DIR.glob("*.json"))
-    print(f"✅ Completado → {len(stops)} JSONs en {OUTPUT_DIR} ({total_size / 1024:.0f} KB)")
+    print(f"✅ Completado → {len(stops)} JSONs generados en {OUTPUT_DIR} ({total_size / 1024:.0f} KB)")
     print(f"✅ Índice → {INDEX_PATH} ({INDEX_PATH.stat().st_size / 1024:.0f} KB)")
 
 
