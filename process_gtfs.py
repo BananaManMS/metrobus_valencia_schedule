@@ -94,6 +94,24 @@ def process_gva_gtfs():
             except Exception:
                 pass
 
+        # exception_type == '2' = servicio EXCLUIDO ese día concreto.
+        # Si calendar.txt ya marcaba ese día como activo para el service_id,
+        # aquí lo quitamos para no dejarlo como "opera" incorrectamente.
+        excluded_calendar = calendar_dates[
+            (calendar_dates['service_id'].isin(valid_services)) &
+            (calendar_dates['exception_type'] == '2')
+        ]
+        for _, row in excluded_calendar.iterrows():
+            s_id = row['service_id']
+            date_str = row['date']
+            try:
+                date_obj = pd.to_datetime(date_str, format='%Y%m%d')
+                day_name = day_names[date_obj.weekday()]
+                if s_id in service_days:
+                    service_days[s_id].discard(day_name)
+            except Exception:
+                pass
+
     # --- PASO 5: Consultar stop_times.txt con el trip_id ---
     print("Paso 5: Consultando stop_times para obtener paradas, horas de salida y secuencias...")
     valid_trip_ids = valid_trips['trip_id'].unique()
@@ -122,7 +140,8 @@ def process_gva_gtfs():
             
         stop_records = merged_data[merged_data['stop_id'] == stop_id]
         lines_dict = {}
-        
+        departures_list = []
+
         for _, record in stop_records.iterrows():
             line_name = record['route_short_name']
             s_id = record['service_id']
@@ -134,7 +153,22 @@ def process_gva_gtfs():
             if line_name not in lines_dict:
                 lines_dict[line_name] = set()
             lines_dict[line_name].update(operating_days)
-            
+
+            # Hora de salida real de este viaje por esta parada (lo que
+            # faltaba: sin esto el JSON no tenía ninguna hora de salida).
+            departures_list.append({
+                "line": line_name,
+                "trip_id": record['trip_id'],
+                "departure_time": record['departure_time'],
+                "stop_sequence": record['stop_sequence'],
+                "service_id": s_id,
+                "days": sorted(operating_days, key=lambda x: days_order.get(x, 99)),
+            })
+
+        # Orden cronológico por hora de salida — importante para que la
+        # app pueda pintar directamente "próximas salidas" sin reordenar.
+        departures_list.sort(key=lambda d: d["departure_time"])
+
         formatted_lines = []
         for line, days_set in lines_dict.items():
             sorted_days = sorted(list(days_set), key=lambda x: days_order.get(x, 99))
@@ -160,7 +194,8 @@ def process_gva_gtfs():
             "name": stop_name,
             "lat": stop_lat,
             "lon": stop_lon,
-            "lines": formatted_lines
+            "lines": formatted_lines,
+            "departures": departures_list,
         }
         
         file_path = stops_dir / f"{stop_id}.json"
