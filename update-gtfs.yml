@@ -1,0 +1,40 @@
+name: Actualizar GTFS Metrobús
+
+on:
+  schedule:
+    # 22:00 UTC = 23:00 hora de Madrid en invierno (CET); en verano (CEST) cae a las 00:00
+    - cron: "0 22 * * *"
+  workflow_dispatch: {}   # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  update-gtfs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install pandas requests
+
+      - name: Generar SQLite desde GTFS
+        run: python gtfs_to_sqlite.py
+
+      - name: Commit del SQLite si ha cambiado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- metrobus.sqlite; then
+            echo "Sin cambios en metrobus.sqlite, nada que commitear."
+          else
+            git add metrobus.sqlite
+            git commit -m "Actualizar GTFS Metrobús ($(date -u +%Y-%m-%d))"
+            git push
+          fi
