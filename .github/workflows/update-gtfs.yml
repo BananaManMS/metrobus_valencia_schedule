@@ -27,14 +27,25 @@ jobs:
       - name: Generar SQLite desde GTFS
         run: python gtfs_to_sqlite.py
 
+      - name: Verificar archivo generado
+        run: |
+          echo "Contenido de la carpeta actual:"
+          ls -lh
+          echo "---"
+          echo "¿Existe metrobus.sqlite?"
+          test -f metrobus.sqlite && echo "SÍ existe, tamaño: $(du -h metrobus.sqlite)" || echo "NO existe"
+          echo "---"
+          echo "Estado de git:"
+          git status
+
       - name: Commit del SQLite si ha cambiado
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- metrobus.sqlite; then
+          git add -A metrobus.sqlite
+          if git diff --cached --quiet -- metrobus.sqlite; then
             echo "Sin cambios en metrobus.sqlite, nada que commitear."
           else
-            git add metrobus.sqlite
             git commit -m "Actualizar GTFS Metrobús ($(date -u +%Y-%m-%d))"
             git push
           fi
