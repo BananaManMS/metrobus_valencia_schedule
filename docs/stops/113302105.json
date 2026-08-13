@@ -1,1 +1,1 @@
-{"id":"113302105","name":"C. Valencia, 24","lat":39.626927,"lon":-0.592566,"lines":[{"line":"L133B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L145A","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]},{"line":"L145B","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}
+{"id":"113302105","name":"C. Valencia, 24","lat":39.626927,"lon":-0.592566,"lines":[{"line":"L133B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L145A","days":["Sábado"]},{"line":"L145B","days":["Sábado","Domingo"]}]}

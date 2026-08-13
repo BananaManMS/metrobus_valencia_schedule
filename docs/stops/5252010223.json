@@ -1,1 +1,1 @@
-{"id":"5252010223","name":"Camí Real, 38","lat":39.402503,"lon":-0.40362,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252010223","name":"Camí Real, 38","lat":39.402503,"lon":-0.40362,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

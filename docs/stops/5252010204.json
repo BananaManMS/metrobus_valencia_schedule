@@ -1,1 +1,1 @@
-{"id":"5252010204","name":"Av. Giorgeta, 18","lat":39.460606,"lon":-0.385692,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252010204","name":"Av. Giorgeta, 18","lat":39.460606,"lon":-0.385692,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

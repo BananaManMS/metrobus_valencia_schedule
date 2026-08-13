@@ -1,1 +1,1 @@
-{"id":"5250500117","name":"C/ València, 41 [Manises]","lat":39.4863969991,"lon":-0.450381,"lines":[{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}
+{"id":"5250500117","name":"C/ València, 41 [Manises]","lat":39.4863969991,"lon":-0.450381,"lines":[{"line":"L150","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]},{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}

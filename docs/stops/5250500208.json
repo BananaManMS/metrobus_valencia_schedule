@@ -1,1 +1,1 @@
-{"id":"5250500208","name":"Plaça de España - Barranquet [Manises]","lat":39.4887602451,"lon":-0.4524136982,"lines":[{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}
+{"id":"5250500208","name":"Plaça de España - Barranquet [Manises]","lat":39.4887602451,"lon":-0.4524136982,"lines":[{"line":"L150","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]},{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}

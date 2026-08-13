@@ -1,1 +1,1 @@
-{"id":"5251450116","name":"C/ Poeta Llorente, 121 - C/ Mestre Serrano [La Pobla de Vallbona]","lat":39.5910183951,"lon":-0.5491136674,"lines":[{"line":"L145N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5251450116","name":"C/ Poeta Llorente, 121 - C/ Mestre Serrano [La Pobla de Vallbona]","lat":39.5910183951,"lon":-0.5491136674,"lines":[{"line":"L145A","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L145B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L145N","days":["Viernes","Sábado","Domingo"]}]}

@@ -1,1 +1,1 @@
-{"id":"111000220","name":"C. Joaquín Muñoz Peirats, 23","lat":39.534789,"lon":-0.350681,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"111000220","name":"C. Joaquín Muñoz Peirats, 23","lat":39.534789,"lon":-0.350681,"lines":[{"line":"L110","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}

@@ -1,1 +1,1 @@
-{"id":"925218000218","name":"Av. Real de Madrid, 15","lat":39.434951,"lon":-0.390797,"lines":[{"line":"L180","days":["Sábado"]}]}
+{"id":"925218000218","name":"Av. Real de Madrid, 15","lat":39.434951,"lon":-0.390797,"lines":[{"line":"L180","days":["Sábado"]},{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}

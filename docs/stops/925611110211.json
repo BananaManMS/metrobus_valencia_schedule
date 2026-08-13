@@ -1,1 +1,1 @@
-{"id":"925611110211","name":"Av. València, 3","lat":39.588514,"lon":-0.307781,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L117N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"925611110211","name":"Av. València, 3","lat":39.588514,"lon":-0.307781,"lines":[{"line":"L110","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L117N","days":["Viernes","Domingo"]}]}

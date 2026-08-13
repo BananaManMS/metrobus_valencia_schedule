@@ -1,1 +1,1 @@
-{"id":"5252020231","name":"Ctra. Real de Madrid Sud, 14","lat":39.378889,"lon":-0.413663,"lines":[{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252020231","name":"Ctra. Real de Madrid Sud, 14","lat":39.378889,"lon":-0.413663,"lines":[{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

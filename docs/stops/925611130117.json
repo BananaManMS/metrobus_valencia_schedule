@@ -1,1 +1,1 @@
-{"id":"925611130117","name":"Av. Barcelona, 70","lat":39.561777,"lon":-0.335742,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"925611130117","name":"Av. Barcelona, 70","lat":39.561777,"lon":-0.335742,"lines":[{"line":"L110","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}

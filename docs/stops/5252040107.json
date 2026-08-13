@@ -1,1 +1,1 @@
-{"id":"5252040107","name":"Av. Albufera - C. Furs","lat":39.369762,"lon":-0.408279,"lines":[{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252040107","name":"Av. Albufera - C. Furs","lat":39.369762,"lon":-0.408279,"lines":[{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

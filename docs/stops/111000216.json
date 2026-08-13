@@ -1,1 +1,1 @@
-{"id":"111000216","name":"Av. Barcelona, 93","lat":39.561471,"lon":-0.336089,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"111000216","name":"Av. Barcelona, 93","lat":39.561471,"lon":-0.336089,"lines":[{"line":"L110","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}

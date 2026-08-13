@@ -1,1 +1,1 @@
-{"id":"5252010120","name":"C. José Soto Micó, 41","lat":39.440161,"lon":-0.388738,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252010120","name":"C. José Soto Micó, 41","lat":39.440161,"lon":-0.388738,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

@@ -1,1 +1,1 @@
-{"id":"5250070217","name":"Av. Miguel Hernández, 8 [Aldaia]","lat":39.4661829991,"lon":-0.467036,"lines":[{"line":"L160B","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]}]}
+{"id":"5250070217","name":"Av. Miguel Hernández, 8 [Aldaia]","lat":39.4661829991,"lon":-0.467036,"lines":[{"line":"L160A","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L160B","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]}]}

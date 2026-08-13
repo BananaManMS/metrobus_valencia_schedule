@@ -1,1 +1,1 @@
-{"id":"925611130118","name":"Av. Raval, 83","lat":39.567059,"lon":-0.332901,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"925611130118","name":"Av. Raval, 83","lat":39.567059,"lon":-0.332901,"lines":[{"line":"L110","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}

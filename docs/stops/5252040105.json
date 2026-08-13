@@ -1,1 +1,1 @@
-{"id":"5252040105","name":"Av. Reis Catòlics, 1","lat":39.366014,"lon":-0.410032,"lines":[{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252040105","name":"Av. Reis Catòlics, 1","lat":39.366014,"lon":-0.410032,"lines":[{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

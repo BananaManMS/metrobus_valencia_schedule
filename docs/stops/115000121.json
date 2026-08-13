@@ -1,1 +1,1 @@
-{"id":"115000121","name":"Av. Rosas, 16","lat":39.491455,"lon":-0.463576,"lines":[{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}
+{"id":"115000121","name":"Av. Rosas, 16","lat":39.491455,"lon":-0.463576,"lines":[{"line":"L150","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]},{"line":"L150N","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]}]}

@@ -1,1 +1,1 @@
-{"id":"5252020115","name":"Ctra. Real de Madrid Nord, 32","lat":39.385205,"lon":-0.410807,"lines":[{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252020115","name":"Ctra. Real de Madrid Nord, 32","lat":39.385205,"lon":-0.410807,"lines":[{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}

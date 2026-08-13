@@ -1,1 +1,1 @@
-{"id":"5250600207","name":"C/ Coladors, 47 [Aldaia]","lat":39.467347,"lon":-0.459126,"lines":[{"line":"L160B","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]}]}
+{"id":"5250600207","name":"C/ Coladors, 47 [Aldaia]","lat":39.467347,"lon":-0.459126,"lines":[{"line":"L160A","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L160B","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"]}]}

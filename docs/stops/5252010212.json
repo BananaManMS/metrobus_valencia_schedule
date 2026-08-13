@@ -1,1 +1,1 @@
-{"id":"5252010212","name":"Av. Real de Madrid, 26","lat":39.434776,"lon":-0.390994,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
+{"id":"5252010212","name":"Av. Real de Madrid, 26","lat":39.434776,"lon":-0.390994,"lines":[{"line":"L180","days":["Sábado","Domingo"]},{"line":"L181","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182","days":["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]},{"line":"L182N","days":["Viernes","Sábado","Domingo"]}]}
