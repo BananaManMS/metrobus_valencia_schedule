@@ -19,7 +19,7 @@ NOJEKYLL_PATH = Path("./docs/.nojekyll")
 
 def main():
     if not DB_PATH.exists():
-        raise SystemExit(f"No se encuentra {DB_PATH} — ejecuta antes gtfs_to_sqlite.py")
+        raise SystemExit(f"❌ No se encuentra {DB_PATH} — ejecuta antes gtfs_to_sqlite.py")
 
     # 1. Elimina la carpeta docs/stops si existe para borrar archivos antiguos/obsoletos
     if OUTPUT_DIR.exists():
@@ -56,8 +56,7 @@ def main():
     agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
 
     if not has_headsign:
-        print("Aviso: el GTFS no trae trip_headsign — se usará el nombre "
-              "de la última parada de cada trip como destino.")
+        print("Aviso: el GTFS no trae trip_headsign — se usará el nombre de la última parada de cada trip como destino.")
         conn.execute("""
             CREATE TEMP TABLE trip_last_stop AS
             SELECT st.trip_id, s.stop_name AS last_stop_name
@@ -69,11 +68,17 @@ def main():
                 WHERE st2.trip_id = st.trip_id
             )
         """)
-        trip_headsign_expr = "COALESCE(t.trip_headsign, tls.last_stop_name)" \
-            if "trip_headsign" in trips_cols else "tls.last_stop_name"
+        trip_headsign_expr = "COALESCE(t.trip_headsign, tls.last_stop_name)" if "trip_headsign" in trips_cols else "tls.last_stop_name"
 
+    # COALESCE para evitar que NULL deshabilite días de autobús
     calendar_select = """
-        c.monday, c.tuesday, c.wednesday, c.thursday, c.friday, c.saturday, c.sunday
+        COALESCE(c.monday, 1) AS monday,
+        COALESCE(c.tuesday, 1) AS tuesday,
+        COALESCE(c.wednesday, 1) AS wednesday,
+        COALESCE(c.thursday, 1) AS thursday,
+        COALESCE(c.friday, 1) AS friday,
+        COALESCE(c.saturday, 1) AS saturday,
+        COALESCE(c.sunday, 1) AS sunday
     """ if has_calendar else """
         1 AS monday, 1 AS tuesday, 1 AS wednesday, 1 AS thursday, 1 AS friday, 1 AS saturday, 1 AS sunday
     """
@@ -108,34 +113,34 @@ def main():
     stops_index = []
 
     for stop in stops:
-        stop_id = stop["stop_id"]
+        stop_id = str(stop["stop_id"]).strip()
 
         departures = conn.execute(departures_sql, (stop_id,)).fetchall()
 
         stop_json = {
             "stop_id": stop_id,
             "stop_name": stop["stop_name"],
-            "stop_lat": stop["stop_lat"],
-            "stop_lon": stop["stop_lon"],
+            "stop_lat": float(stop["stop_lat"]) if stop["stop_lat"] else 0.0,
+            "stop_lon": float(stop["stop_lon"]) if stop["stop_lon"] else 0.0,
             "departures": [
                 {
                     "departure_time": d["departure_time"],
-                    "trip_id": d["trip_id"],
-                    "headsign": d["trip_headsign"],
-                    "service_id": d["service_id"],
-                    "route_id": d["route_id"],
-                    "route_short_name": d["route_short_name"],
-                    "route_long_name": d["route_long_name"],
-                    "route_color": d["route_color"],
-                    "agency_name": d["agency_name"],
+                    "trip_id": str(d["trip_id"]),
+                    "headsign": d["trip_headsign"] or "",
+                    "service_id": str(d["service_id"]),
+                    "route_id": str(d["route_id"]),
+                    "route_short_name": d["route_short_name"] or "",
+                    "route_long_name": d["route_long_name"] or "",
+                    "route_color": d["route_color"] or "",
+                    "agency_name": d["agency_name"] or "",
                     "days": {
-                        "monday": d["monday"] if d["monday"] is not None else 0,
-                        "tuesday": d["tuesday"] if d["tuesday"] is not None else 0,
-                        "wednesday": d["wednesday"] if d["wednesday"] is not None else 0,
-                        "thursday": d["thursday"] if d["thursday"] is not None else 0,
-                        "friday": d["friday"] if d["friday"] is not None else 0,
-                        "saturday": d["saturday"] if d["saturday"] is not None else 0,
-                        "sunday": d["sunday"] if d["sunday"] is not None else 0,
+                        "monday": int(d["monday"]),
+                        "tuesday": int(d["tuesday"]),
+                        "wednesday": int(d["wednesday"]),
+                        "thursday": int(d["thursday"]),
+                        "friday": int(d["friday"]),
+                        "saturday": int(d["saturday"]),
+                        "sunday": int(d["sunday"]),
                     }
                 }
                 for d in departures
@@ -151,8 +156,8 @@ def main():
         stops_index.append({
             "stop_id": stop_id,
             "stop_name": stop["stop_name"],
-            "stop_lat": stop["stop_lat"],
-            "stop_lon": stop["stop_lon"],
+            "stop_lat": float(stop["stop_lat"]) if stop["stop_lat"] else 0.0,
+            "stop_lon": float(stop["stop_lon"]) if stop["stop_lon"] else 0.0,
         })
 
     INDEX_PATH.write_text(
@@ -163,9 +168,8 @@ def main():
     conn.close()
 
     total_size = sum(f.stat().st_size for f in OUTPUT_DIR.glob("*.json"))
-    print(f"Listo → {len(stops)} archivos en {OUTPUT_DIR} "
-          f"({total_size / 1024:.0f} KB en total)")
-    print(f"Índice → {INDEX_PATH} ({INDEX_PATH.stat().st_size / 1024:.0f} KB)")
+    print(f"✅ Completado → {len(stops)} JSONs en {OUTPUT_DIR} ({total_size / 1024:.0f} KB)")
+    print(f"✅ Índice → {INDEX_PATH} ({INDEX_PATH.stat().st_size / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":
