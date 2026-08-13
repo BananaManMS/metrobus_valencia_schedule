@@ -17,6 +17,7 @@ Uso:
 """
 
 import json
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -29,6 +30,11 @@ def main():
     if not DB_PATH.exists():
         raise SystemExit(f"No se encuentra {DB_PATH} — ejecuta antes gtfs_to_sqlite.py")
 
+    # Borra por completo el directorio de salida antes de regenerar, para
+    # que las paradas que ya no existan en el GTFS de hoy no dejen JSON
+    # huérfanos de días anteriores.
+    if OUTPUT_DIR.exists():
+        shutil.rmtree(OUTPUT_DIR)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # Evita que GitHub Pages procese docs/ con Jekyll (que fallaría al
