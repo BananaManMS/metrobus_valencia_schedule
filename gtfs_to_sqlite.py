@@ -86,7 +86,6 @@ def main():
     valid_trip_ids = set(stop_times_initial["trip_id"])
 
     # --- 3. MANTENER TODAS LAS PARADAS DE ESAS EXPEDICIONES ---
-    # (Para no romper rutas que salen o entran a Valencia)
     stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
     trips_f = trips[trips["trip_id"].isin(valid_trip_ids)].copy()
 
@@ -127,15 +126,21 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
-    # Crear índices para acelerar consultas de la API
-    conn.executescript("""
-        CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);
-        CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);
-        CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);
-        CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);
-        CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);
-        CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);
-    """)
+    # Crear índices dinámicos solo para las tablas existentes
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
+        "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
+        "CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);",
+        "CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);",
+        "CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);",
+    ]
+
+    if not calendar_f.empty:
+        indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);")
+    if not calendar_dates_f.empty:
+        indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_dates_service_id ON calendar_dates(service_id);")
+
+    conn.executescript("\n".join(indexes))
     conn.commit()
     conn.close()
 
