@@ -1,7 +1,7 @@
 """
 Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
-carga todos los calendarios, rutas y paradas, y genera metrobus.sqlite
-de forma completa, incluyendo TODAS las paradas registradas.
+filtra únicamente los operadores del Área Metropolitana de Valencia (Metrobús)
+y genera la base de datos SQLite limpia.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -22,9 +22,19 @@ GTFS_URL = (
 )
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Bounding box amplio para abarcar toda la red interurbana sin recortar zonas limítrofes
-LAT_MIN, LAT_MAX = 37.50, 41.00
-LON_MIN, LON_MAX = -2.50, 1.00
+# Lista oficial de operadores/concesiones de Metrobús (Área Metropolitana de València)
+METROBUS_AGENCIES = {
+    "València Metropolitana Nord",
+    "València Metropolitana Nord-Oest",
+    "València Metropolitana Oest",
+    "València Metropolitana Sud",
+    "La Hoya de Buñol - València",
+    "Montserrat - València",
+    "La Serranía - València",
+    "Alto Palancia - Sagunt - València",
+    "València - Benifaió",
+    # "La Ribera - València",  # Descomentar si deseas incluir Sueca/Cullera
+}
 
 REQUIRED_FILES = [
     "agency.txt",
@@ -57,7 +67,7 @@ def main():
     if missing:
         raise SystemExit(f"Faltan archivos esenciales en el GTFS descargado: {missing}")
 
-    print("Cargando GTFS…")
+    print("Cargando datos del GTFS…")
     agency = load(zf, "agency.txt")
     routes = load(zf, "routes.txt")
     trips = load(zf, "trips.txt")
@@ -66,41 +76,54 @@ def main():
     calendar = load(zf, "calendar.txt")
     calendar_dates = load(zf, "calendar_dates.txt")
 
-    # --- 1. Validar coordenadas de paradas ---
-    stops["stop_lat_num"] = pd.to_numeric(stops["stop_lat"], errors="coerce")
-    stops["stop_lon_num"] = pd.to_numeric(stops["stop_lon"], errors="coerce")
+    # --- 1. Filtrar agencias de Metrobús ---
+    agency["agency_name_clean"] = agency["agency_name"].str.strip()
+    agency_f = agency[agency["agency_name_clean"].isin(METROBUS_AGENCIES)].copy()
+    agency_f.drop(columns=["agency_name_clean"], inplace=True)
 
-    # Mantenemos las paradas dentro del rango geográfico regional
-    stops_in_box = stops[
-        stops["stop_lat_num"].between(LAT_MIN, LAT_MAX)
-        & stops["stop_lon_num"].between(LON_MIN, LON_MAX)
-    ].copy()
-    stops_in_box.drop(columns=["stop_lat_num", "stop_lon_num"], inplace=True)
+    print(f"Agencias totales: {len(agency)} → Agencias de Metrobús seleccionadas: {len(agency_f)}")
 
-    print(f"Paradas en el GTFS original: {len(stops)} → válidas: {len(stops_in_box)}")
+    if agency_f.empty:
+        raise SystemExit("Error: No se encontró ninguna agencia coincidente. Revisa los nombres de agency.txt")
 
-    # --- 2. MANTENER TODAS LAS PARADAS VÁLIDAS ---
-    # Incluye todas las paradas en SQLite (tengan o no salidas asociadas)
-    stops_f = stops_in_box.copy()
+    # --- 2. Filtrar rutas pertenecientes a esas agencias ---
+    valid_agency_ids = set(agency_f["agency_id"]) if "agency_id" in agency_f.columns else set()
+    if valid_agency_ids:
+        routes_f = routes[routes["agency_id"].isin(valid_agency_ids)].copy()
+    else:
+        routes_f = routes.copy()
 
-    # --- 3. Filtrar expediciones, rutas, agencias y calendarios ---
-    valid_stop_ids = set(stops_f["stop_id"])
-    stop_times_f = stop_times[stop_times["stop_id"].isin(valid_stop_ids)].copy()
+    print(f"Rutas totales: {len(routes)} → Rutas Metrobús: {len(routes_f)}")
 
-    valid_trip_ids = set(stop_times_f["trip_id"])
-    trips_f = trips[trips["trip_id"].isin(valid_trip_ids)].copy()
+    # --- 3. Filtrar expediciones (trips) de esas rutas ---
+    valid_route_ids = set(routes_f["route_id"])
+    trips_f = trips[trips["route_id"].isin(valid_route_ids)].copy()
 
-    valid_route_ids = set(trips_f["route_id"])
-    routes_f = routes[routes["route_id"].isin(valid_route_ids)].copy()
+    print(f"Trips totales: {len(trips)} → Trips Metrobús: {len(trips_f)}")
 
-    valid_agency_ids = set(routes_f["agency_id"]) if "agency_id" in routes_f.columns else set()
-    agency_f = agency[agency["agency_id"].isin(valid_agency_ids)].copy() if valid_agency_ids else agency.copy()
+    # --- 4. Filtrar horarios (stop_times) de esos trips ---
+    valid_trip_ids = set(trips_f["trip_id"])
+    stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
 
+    # --- 5. Filtrar paradas (stops) utilizadas únicamente por esas líneas ---
+    valid_stop_ids = set(stop_times_f["stop_id"])
+
+    # Incluir también paradas padre si existen en la estructura GTFS
+    if "parent_station" in stops.columns:
+        parents = set(stops[stops["stop_id"].isin(valid_stop_ids)]["parent_station"])
+        parents.discard("")
+        valid_stop_ids.update(parents)
+
+    stops_f = stops[stops["stop_id"].isin(valid_stop_ids)].copy()
+
+    print(f"Paradas totales en GTFS: {len(stops)} → Paradas finales de Metrobús: {len(stops_f)}")
+
+    # --- 6. Filtrar calendarios activos para esos trips ---
     valid_service_ids = set(trips_f["service_id"])
     calendar_f = calendar[calendar["service_id"].isin(valid_service_ids)].copy() if not calendar.empty else calendar
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
-    # --- 4. Volcar a SQLite ---
+    # --- 7. Volcar a SQLite ---
     if OUTPUT_DB.exists():
         OUTPUT_DB.unlink()
 
@@ -117,7 +140,7 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
-    # Crear índices para acelerar consultas
+    # Crear índices para optimizar la velocidad de la API
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
         "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
@@ -136,8 +159,7 @@ def main():
     conn.close()
 
     size_mb = OUTPUT_DB.stat().st_size / (1024 * 1024)
-    print(f"\n¡Base de datos generada con éxito! → {OUTPUT_DB} ({size_mb:.1f} MB)")
-    print(f"Total paradas procesadas e importadas: {len(stops_f)}")
+    print(f"\n¡Base de datos limpia de Metrobús generada! → {OUTPUT_DB} ({size_mb:.1f} MB)")
 
 
 if __name__ == "__main__":
