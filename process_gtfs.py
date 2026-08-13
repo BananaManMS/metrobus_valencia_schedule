@@ -58,22 +58,13 @@ def process_gva_gtfs():
     print("Paso 3: Extrayendo viajes (trips) asociados a las rutas...")
     valid_trips = trips[trips['route_id'].isin(valid_route_ids)]
     
-    # --- PASO 4: Traducir días de operación usando calendar_dates.txt / calendar.txt ---
+    # --- PASO 4: Traducir días de operación usando calendar_dates.txt ---
+    #             (este GTFS de la GVA no trae calendar.txt — solo excepciones
+    #             puntuales por fecha, así que el día de la semana se deriva
+    #             de cada fecha concreta y se generaliza a partir de ahí)
     print("Paso 4: Mapeando service_id a días de la semana...")
     day_names = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
     service_days = {}
-
-    if (data_path / 'calendar.txt').exists():
-        calendar = clean_gtfs_df(data_path / 'calendar.txt')
-        day_cols = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        for _, row in calendar.iterrows():
-            s_id = row['service_id']
-            active_days = set()
-            for idx, col in enumerate(day_cols):
-                if str(row.get(col, '0')) == '1':
-                    active_days.add(day_names[idx])
-            if active_days:
-                service_days[s_id] = active_days
 
     if (data_path / 'calendar_dates.txt').exists():
         calendar_dates = clean_gtfs_df(data_path / 'calendar_dates.txt')
@@ -206,7 +197,23 @@ def process_gva_gtfs():
     print("Generando listado global (stops_index.json)...")
     with open(output_dir / 'stops_index.json', 'w', encoding='utf-8') as f:
         json.dump(stops_global_list, f, ensure_ascii=False, separators=(',', ':'))
-        
+
+    # --- PASO 7: Generar catálogo de líneas (lines.json) ---
+    # Diccionario route_short_name -> route_long_name, para no repetir el
+    # nombre largo en cada parada/salida. Se genera aparte a partir de
+    # valid_routes, sin tocar cómo se construyen stops_index.json ni los
+    # JSON individuales de cada parada.
+    print("Generando catálogo de líneas (lines.json)...")
+    lines_catalog = {}
+    for _, route_row in valid_routes.iterrows():
+        short_name = route_row.get('route_short_name', '')
+        long_name = route_row.get('route_long_name', '')
+        if short_name and short_name not in lines_catalog:
+            lines_catalog[short_name] = long_name
+
+    with open(output_dir / 'lines.json', 'w', encoding='utf-8') as f:
+        json.dump(lines_catalog, f, ensure_ascii=False, separators=(',', ':'))
+
     print("Limpiando archivos temporales...")
     shutil.rmtree("gtfs_temp", ignore_errors=True)
         
