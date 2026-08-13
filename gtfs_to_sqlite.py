@@ -1,9 +1,7 @@
 """
-Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
-filtra únicamente los operadores del Área Metropolitana de Valencia (Metrobús),
-sintetiza la tabla 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
-
-A prueba de bloqueos de User-Agent, BOM UTF-8 e inconsistencias de tildes/mayúsculas.
+Descarga el GTFS de la Generalitat Valenciana, filtra las agencias de Metrobús
+(incluyendo conectores metropolitanos y rutas con agency_id vacío),
+fuerza la síntesis de 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -28,7 +26,7 @@ GTFS_URL = (
 FALLBACK_ZIP = Path("./gtfs_fallback.zip")
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Agencias oficiales de Metrobús (lista normalizada)
+# Agencias oficiales del Área Metropolitana de València (incluyendo La Ribera)
 METROBUS_AGENCIES = {
     "VALENCIA METROPOLITANA NORD",
     "VALENCIA METROPOLITANA NORD-OEST",
@@ -39,6 +37,7 @@ METROBUS_AGENCIES = {
     "LA SERRANIA - VALENCIA",
     "ALTO PALANCIA - SAGUNT - VALENCIA",
     "VALENCIA - BENIFAIO",
+    "LA RIBERA - VALENCIA",
 }
 
 REQUIRED_FILES = [
@@ -51,10 +50,9 @@ REQUIRED_FILES = [
 
 
 def remove_accents(input_str: str) -> str:
-    """Elimina tildes y convierte a mayúsculas para comparaciones insensibles."""
     if not input_str:
         return ""
-    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    nfkd_form = unicodedata.normalize('NFKD', str(input_str))
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return only_ascii.upper().strip()
 
@@ -62,10 +60,7 @@ def remove_accents(input_str: str) -> str:
 def download_gtfs() -> zipfile.ZipFile:
     print(f"Intentando descargar GTFS desde {GTFS_URL} …")
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36"
     }
     
     for intento in range(1, 4):
@@ -88,7 +83,6 @@ def download_gtfs() -> zipfile.ZipFile:
 def load(zf: zipfile.ZipFile, name: str) -> pd.DataFrame:
     if name in zf.namelist():
         with zf.open(name) as f:
-            # Soportar codificación utf-8-sig para eliminar automáticamente marcas BOM (\ufeff)
             df = pd.read_csv(f, dtype=str, keep_default_na=False, encoding="utf-8-sig")
             for col in df.columns:
                 df[col] = df[col].str.strip()
@@ -109,90 +103,79 @@ def main():
     trips = load(zf, "trips.txt")
     stop_times = load(zf, "stop_times.txt")
     stops = load(zf, "stops.txt")
-    calendar = load(zf, "calendar.txt")
     calendar_dates = load(zf, "calendar_dates.txt")
 
-    # --- 1. Filtrar agencias de Metrobús (Normalizado insensible a tildes/mayúsculas) ---
+    # 1. Filtrar agencias de Metrobús
     agency["agency_norm"] = agency["agency_name"].apply(remove_accents)
     agency_f = agency[agency["agency_norm"].isin(METROBUS_AGENCIES)].copy()
     agency_f.drop(columns=["agency_norm"], inplace=True)
 
-    print(f"Agencias totales: {len(agency)} → Agencias de Metrobús seleccionadas: {len(agency_f)}")
-
-    if agency_f.empty:
-        raise SystemExit("Error: No se encontró ninguna agencia coincidente en agency.txt.")
-
-    # --- 2. Filtrar rutas pertenecientes a esas agencias ---
     valid_agency_ids = set(agency_f["agency_id"]) if "agency_id" in agency_f.columns else set()
-    if valid_agency_ids:
-        routes_f = routes[routes["agency_id"].isin(valid_agency_ids)].copy()
+    print(f"Agencias seleccionadas: {len(agency_f)}")
+
+    # 2. Filtrar rutas (Acepta las de agencias válidas O las que vienen con agency_id vacío/nulo)
+    if "agency_id" in routes.columns:
+        routes_f = routes[routes["agency_id"].isin(valid_agency_ids) | (routes["agency_id"] == "")].copy()
     else:
         routes_f = routes.copy()
 
-    print(f"Rutas totales: {len(routes)} → Rutas Metrobús: {len(routes_f)}")
-
-    # --- 3. Filtrar expediciones (trips) de esas rutas ---
     valid_route_ids = set(routes_f["route_id"])
+    print(f"Rutas Metrobús conservadas: {len(routes_f)}")
+
+    # 3. Filtrar trips
     trips_f = trips[trips["route_id"].isin(valid_route_ids)].copy()
-
-    print(f"Trips totales: {len(trips)} → Trips Metrobús: {len(trips_f)}")
-
-    # --- 4. Filtrar horarios (stop_times) de esos trips ---
     valid_trip_ids = set(trips_f["trip_id"])
-    stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
+    print(f"Trips asociados: {len(trips_f)}")
 
-    # --- 5. Filtrar paradas (stops) utilizadas por esas líneas ---
+    # 4. Filtrar stop_times
+    stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
     valid_stop_ids = set(stop_times_f["stop_id"])
 
+    # 5. Filtrar stops e incluir explícitamente paradas padre
     if "parent_station" in stops.columns:
         parents = set(stops[stops["stop_id"].isin(valid_stop_ids)]["parent_station"])
         parents.discard("")
         valid_stop_ids.update(parents)
 
     stops_f = stops[stops["stop_id"].isin(valid_stop_ids)].copy()
+    print(f"Paradas finales de Metrobús: {len(stops_f)}")
 
-    print(f"Paradas totales en GTFS: {len(stops)} → Paradas finales de Metrobús: {len(stops_f)}")
-
-    # --- 6. SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES ---
+    # 6. SINTETIZAR CALENDAR OBLIGATORIAMENTE DESDE CALENDAR_DATES
     valid_service_ids = set(trips_f["service_id"])
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
-    # Si calendar.txt no existe o está vacío, se sintetiza a partir de calendar_dates
-    if (calendar.empty or len(calendar) == 0) and not calendar_dates_f.empty:
-        print("Sintetizando la tabla 'calendar' desde las fechas reales de 'calendar_dates'…")
-        service_days = {}
-        for _, row in calendar_dates_f.iterrows():
-            if str(row.get("exception_type")).strip() == "1":  # Servicio activo
-                sid = row["service_id"]
-                dt_str = row["date"]
-                try:
-                    dt = datetime.datetime.strptime(dt_str, "%Y%m%d")
-                    day_idx = dt.weekday()  # 0=Lunes, 1=Martes, ..., 6=Domingo
-                    if sid not in service_days:
-                        service_days[sid] = [0] * 7
-                    service_days[sid][day_idx] = 1
-                except Exception:
-                    pass
+    print("Sintetizando la tabla 'calendar' desde las fechas de 'calendar_dates'…")
+    service_days = {}
+    for _, row in calendar_dates_f.iterrows():
+        if str(row.get("exception_type")).strip() == "1":
+            sid = row["service_id"]
+            dt_str = row["date"]
+            try:
+                dt = datetime.datetime.strptime(dt_str, "%Y%m%d")
+                day_idx = dt.weekday()
+                if sid not in service_days:
+                    service_days[sid] = [0] * 7
+                service_days[sid][day_idx] = 1
+            except Exception:
+                pass
 
-        calendar_rows = []
-        for sid, days in service_days.items():
-            calendar_rows.append({
-                "service_id": sid,
-                "monday": days[0],
-                "tuesday": days[1],
-                "wednesday": days[2],
-                "thursday": days[3],
-                "friday": days[4],
-                "saturday": days[5],
-                "sunday": days[6]
-            })
+    calendar_rows = []
+    for sid, days in service_days.items():
+        calendar_rows.append({
+            "service_id": sid,
+            "monday": days[0],
+            "tuesday": days[1],
+            "wednesday": days[2],
+            "thursday": days[3],
+            "friday": days[4],
+            "saturday": days[5],
+            "sunday": days[6]
+        })
 
-        calendar_f = pd.DataFrame(calendar_rows)
-        print(f"Tabla 'calendar' sintetizada ({len(calendar_f)} servicios).")
-    else:
-        calendar_f = calendar[calendar["service_id"].isin(valid_service_ids)].copy() if not calendar.empty else calendar
+    calendar_f = pd.DataFrame(calendar_rows)
+    print(f"Tabla 'calendar' sintetizada con éxito ({len(calendar_f)} servicios).")
 
-    # --- 7. Volcar a SQLite ---
+    # 7. Volcar a SQLite
     if OUTPUT_DB.exists():
         OUTPUT_DB.unlink()
 
@@ -215,19 +198,18 @@ def main():
         "CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);",
         "CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);",
         "CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);",
+        "CREATE INDEX IF NOT EXISTS idx_stops_parent ON stops(parent_station);",
     ]
 
     if not calendar_f.empty:
         indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);")
-    if not calendar_dates_f.empty:
-        indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_dates_service_id ON calendar_dates(service_id);")
 
     conn.executescript("\n".join(indexes))
     conn.commit()
     conn.close()
 
     size_mb = OUTPUT_DB.stat().st_size / (1024 * 1024)
-    print(f"\n¡Base de datos limpia de Metrobús generada! → {OUTPUT_DB} ({size_mb:.1f} MB)")
+    print(f"\n¡Base de datos limpia generada con éxito! → {OUTPUT_DB} ({size_mb:.1f} MB)")
 
 
 if __name__ == "__main__":
