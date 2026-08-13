@@ -1,6 +1,6 @@
 """
 Genera un archivo JSON por cada parada a partir de metrobus.sqlite,
-uniendo las salidas de paradas padre e hijo para evitar JSONs vacíos.
+listo para servirse como API estática con GitHub Pages.
 """
 
 import json
@@ -35,6 +35,7 @@ def main():
     """).fetchall()
 
     tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    stops_cols = {row[1] for row in conn.execute("PRAGMA table_info(stops)")} if "stops" in tables else set()
     trips_cols = {row[1] for row in conn.execute("PRAGMA table_info(trips)")} if "trips" in tables else set()
     routes_cols = {row[1] for row in conn.execute("PRAGMA table_info(routes)")} if "routes" in tables else set()
     agency_cols = {row[1] for row in conn.execute("PRAGMA table_info(agency)")} if "agency" in tables else set()
@@ -42,6 +43,7 @@ def main():
 
     has_headsign = "trip_headsign" in trips_cols
     has_calendar = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}.issubset(calendar_cols)
+    has_parent_station = "parent_station" in stops_cols
 
     route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "NULL"
     route_long_expr = "r.route_long_name" if "route_long_name" in routes_cols else "NULL"
@@ -78,7 +80,8 @@ def main():
 
     calendar_join = "LEFT JOIN calendar c ON c.service_id = t.service_id" if has_calendar else ""
 
-    # CLAVE: Busca salidas de la propia parada O de sus andenes/postes hijos (parent_station)
+    where_clause = "WHERE st.stop_id = ? OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)" if has_parent_station else "WHERE st.stop_id = ?"
+
     departures_sql = f"""
         SELECT DISTINCT
             st.departure_time,
@@ -98,7 +101,7 @@ def main():
         LEFT JOIN agency a ON a.agency_id = r.agency_id
         {calendar_join}
         {"LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id" if not has_headsign else ""}
-        WHERE st.stop_id = ? OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)
+        {where_clause}
         ORDER BY st.departure_time
     """
 
@@ -109,8 +112,8 @@ def main():
     for stop in stops:
         stop_id = str(stop["stop_id"]).strip()
 
-        # Pasamos stop_id dos veces: una para st.stop_id y otra para parent_station
-        departures = conn.execute(departures_sql, (stop_id, stop_id)).fetchall()
+        params = (stop_id, stop_id) if has_parent_station else (stop_id,)
+        departures = conn.execute(departures_sql, params).fetchall()
 
         stop_json = {
             "stop_id": stop_id,
