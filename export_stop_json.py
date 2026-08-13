@@ -1,6 +1,6 @@
 """
-Genera un archivo JSON por cada parada a partir de metrobus.sqlite,
-listo para servirse como API estática con GitHub Pages.
+Genera un archivo JSON por cada parada a partir de metrobus.sqlite
+de forma indexada y rápida.
 
 Muestra en 'lines' únicamente los códigos/números de línea (ej. ["L150", "L160"]).
 
@@ -53,14 +53,14 @@ def main():
     route_color_expr = "r.route_color" if "route_color" in routes_cols else "NULL"
     agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
 
-    # 1. Mapa de paradas hijo a estación padre (si la columna parent_station existe)
+    # 1. Mapa de paradas hijo a estación padre
     parent_map = {}
     if has_parent_station:
         parent_rows = conn.execute(
             "SELECT stop_id, parent_station FROM stops WHERE parent_station IS NOT NULL AND parent_station != ''"
         ).fetchall()
         for pr in parent_rows:
-            parent_map[str(pr["stop_id"]).strip()] = str(pr["parent_station"]).strip()
+            parent_map[str(pr["stop_id"])] = str(pr["parent_station"])
 
     # 2. Consultar números/códigos de línea por cada parada
     lines_rows = conn.execute(f"""
@@ -74,7 +74,7 @@ def main():
 
     lines_by_stop = {}
     for row in lines_rows:
-        s_id = str(row["stop_id"]).strip()
+        s_id = str(row["stop_id"])
         line_code = (row["route_code"] or "").strip()
         if line_code:
             lines_by_stop.setdefault(s_id, set()).add(line_code)
@@ -85,7 +85,7 @@ def main():
     for s_id, lines_set in lines_by_stop.items():
         lines_by_stop[s_id] = sorted(list(lines_set))
 
-    # 3. Determinar destino (headsign)
+    # 3. Determinar destino (headsign) si no existe trip_headsign
     if not has_headsign:
         conn.execute("""
             CREATE TEMP TABLE IF NOT EXISTS trip_last_stop AS
@@ -93,7 +93,7 @@ def main():
             FROM stop_times st
             JOIN stops s ON s.stop_id = st.stop_id
             WHERE st.stop_sequence = (
-                SELECT MAX(CAST(st2.stop_sequence AS INTEGER))
+                SELECT MAX(st2.stop_sequence)
                 FROM stop_times st2
                 WHERE st2.trip_id = st.trip_id
             )
@@ -121,13 +121,18 @@ def main():
     """
 
     calendar_join = "LEFT JOIN calendar c ON c.service_id = t.service_id" if has_calendar else ""
-    where_clause = "WHERE st.stop_id = ? OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)" if has_parent_station else "WHERE st.stop_id = ?"
+    
+    where_clause = """
+        WHERE st.stop_id = ? 
+           OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)
+    """ if has_parent_station else "WHERE st.stop_id = ?"
 
+    # Consulta SQL directa ultra-optimizada con índice de SQLite
     departures_sql = f"""
         SELECT DISTINCT
-            st.departure_time,
+            COALESCE(NULLIF(st.departure_time, ''), NULLIF(st.arrival_time, ''), '00:00:00') AS departure_time,
             st.stop_sequence,
-            t.trip_id,
+            st.trip_id,
             {trip_headsign_expr} AS trip_headsign,
             t.service_id,
             r.route_id,
@@ -137,13 +142,13 @@ def main():
             {agency_name_expr} AS agency_name,
             {calendar_select}
         FROM stop_times st
-        JOIN trips t   ON t.trip_id = st.trip_id
-        JOIN routes r  ON r.route_id = t.route_id
-        LEFT JOIN agency a ON a.agency_id = r.agency_id
+        LEFT JOIN trips t   ON t.trip_id = st.trip_id
+        LEFT JOIN routes r  ON r.route_id = t.route_id
+        LEFT JOIN agency a  ON a.agency_id = r.agency_id
         {calendar_join}
         {"LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id" if not has_headsign else ""}
         {where_clause}
-        ORDER BY st.departure_time
+        ORDER BY departure_time
     """
 
     print(f"Generando JSON para {len(stops)} paradas…")
@@ -166,10 +171,10 @@ def main():
             "departures": [
                 {
                     "departure_time": d["departure_time"],
-                    "trip_id": str(d["trip_id"]),
+                    "trip_id": str(d["trip_id"] or ""),
                     "headsign": d["trip_headsign"] or "",
-                    "service_id": str(d["service_id"]),
-                    "route_id": str(d["route_id"]),
+                    "service_id": str(d["service_id"] or ""),
+                    "route_id": str(d["route_id"] or ""),
                     "route_short_name": d["route_short_name"] or "",
                     "route_long_name": d["route_long_name"] or "",
                     "route_color": d["route_color"] or "",
