@@ -1,6 +1,4 @@
-import urllib.request
 import zipfile
-import io
 import pandas as pd
 import json
 import os
@@ -18,7 +16,7 @@ def clean_gtfs_df(filepath):
     return df
 
 def process_gva_gtfs():
-    print("Iniciando procesamiento de GTFS...")
+    print("Iniciando procesamiento de GTFS local...")
     
     # 1. Limpiar directorio docs 
     output_dir = Path("docs")
@@ -28,13 +26,13 @@ def process_gva_gtfs():
     stops_dir = output_dir / "stops"
     stops_dir.mkdir(parents=True, exist_ok=True)
 
-    # 2. Descargar y extraer GTFS
-    print("Descargando GTFS desde Dades Obertes GVA...")
-    url = "https://dadesobertes.gva.es/dataset/2f380ffd-b389-4ff4-9f7c-be92b30fbf28/resource/3c8a2e6b-5b5e-49f5-872f-5f33fcd52547/download/gtfs.zip"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(req)
-    
-    with zipfile.ZipFile(io.BytesIO(response.read())) as zip_ref:
+    # 2. Leer el ZIP local subido al repositorio
+    zip_path = Path("20260715_020006_GenValenciana_Interurbano.zip")
+    if not zip_path.exists():
+        raise FileNotFoundError(f"No se encuentra el archivo ZIP en la ruta: {zip_path.absolute()}")
+
+    print(f"Extrayendo archivo local: {zip_path.name}...")
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall("gtfs_temp")
         
     data_path = Path("gtfs_temp")
