@@ -1,7 +1,7 @@
 """
-Descarga el GTFS de la Generalitat Valenciana, realiza los JOINs relacionales
-exactos en SQLite por ID (rescatando la L150 y todas las líneas de Metrobús)
-y sintetiza la tabla 'calendar' desde 'calendar_dates'.
+Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
+filtra únicamente los operadores del Área Metropolitana de Valencia (Metrobús),
+sintetiza la tabla 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -25,7 +25,7 @@ GTFS_URL = (
 FALLBACK_ZIP = Path("./gtfs_fallback.zip")
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Nombres exactos de las agencias de Metrobús en agency.txt
+# Lista oficial de operadores/concesiones de Metrobús (Área Metropolitana de València)
 METROBUS_AGENCIES = {
     "València Metropolitana Nord",
     "València Metropolitana Nord-Oest",
@@ -81,7 +81,7 @@ def main():
 
     missing = [f for f in REQUIRED_FILES if f not in zf.namelist()]
     if missing:
-        raise SystemExit(f"Faltan archivos esenciales en el GTFS: {missing}")
+        raise SystemExit(f"Faltan archivos esenciales en el GTFS descargado: {missing}")
 
     print("Cargando datos del GTFS…")
     agency = load(zf, "agency.txt")
@@ -92,45 +92,49 @@ def main():
     calendar = load(zf, "calendar.txt")
     calendar_dates = load(zf, "calendar_dates.txt")
 
-    # 1. Filtrar agency.txt por los nombres de Metrobús
+    # --- 1. Filtrar agencias de Metrobús ---
     agency["agency_name_clean"] = agency["agency_name"].str.strip()
     agency_f = agency[agency["agency_name_clean"].isin(METROBUS_AGENCIES)].copy()
     agency_f.drop(columns=["agency_name_clean"], inplace=True)
 
-    # Obtener los IDs numéricos exactos de esas agencias (ej. "2089140751")
-    valid_agency_ids = set(agency_f["agency_id"])
-    print(f"Agencias seleccionadas: {len(agency_f)} | IDs de agencias: {valid_agency_ids}")
+    print(f"Agencias totales: {len(agency)} → Agencias de Metrobús seleccionadas: {len(agency_f)}")
 
-    # 2. Filtrar routes.txt usando los IDs numéricos de agency_id
-    routes_f = routes[routes["agency_id"].isin(valid_agency_ids)].copy()
+    if agency_f.empty:
+        raise SystemExit("Error: No se encontró ninguna agencia coincidente. Revisa los nombres de agency.txt")
+
+    # --- 2. Filtrar rutas pertenecientes a esas agencias ---
+    valid_agency_ids = set(agency_f["agency_id"]) if "agency_id" in agency_f.columns else set()
+    if valid_agency_ids:
+        routes_f = routes[routes["agency_id"].isin(valid_agency_ids)].copy()
+    else:
+        routes_f = routes.copy()
+
+    print(f"Rutas totales: {len(routes)} → Rutas Metrobús: {len(routes_f)}")
+
+    # --- 3. Filtrar expediciones (trips) de esas rutas ---
     valid_route_ids = set(routes_f["route_id"])
-    print(f"Rutas de Metrobús encontradas en routes.txt: {len(routes_f)}")
-
-    # Comprobación explícita de la L150
-    l150_routes = routes_f[routes_f["route_short_name"].str.contains("150", case=False, na=False)]
-    if not l150_routes.empty:
-        print(f"  ✅ Línea L150 localizada en routes.txt con route_id: {set(l150_routes['route_id'])}")
-
-    # 3. Filtrar trips.txt usando route_id numérico (ej. "2089153401")
     trips_f = trips[trips["route_id"].isin(valid_route_ids)].copy()
+
+    print(f"Trips totales: {len(trips)} → Trips Metrobús: {len(trips_f)}")
+
+    # --- 4. Filtrar horarios (stop_times) de esos trips ---
     valid_trip_ids = set(trips_f["trip_id"])
-    print(f"Trips de Metrobús asociados: {len(trips_f)}")
-
-    # 4. Filtrar stop_times.txt usando trip_id numérico (ej. "2782684330")
     stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
-    print(f"Horarios de paradas (stop_times) asociados: {len(stop_times_f)}")
 
-    # 5. Filtrar stops.txt usando stop_id numérico (ej. "5250500202")
+    # --- 5. Filtrar paradas (stops) utilizadas únicamente por esas líneas ---
     valid_stop_ids = set(stop_times_f["stop_id"])
+
+    # Incluir también paradas padre si existen en la estructura GTFS
     if "parent_station" in stops.columns:
         parents = set(stops[stops["stop_id"].isin(valid_stop_ids)]["parent_station"])
         parents.discard("")
         valid_stop_ids.update(parents)
 
     stops_f = stops[stops["stop_id"].isin(valid_stop_ids)].copy()
-    print(f"Paradas finales de Metrobús: {len(stops_f)}")
 
-    # 6. Sintetizar calendar.txt desde calendar_dates.txt
+    print(f"Paradas totales en GTFS: {len(stops)} → Paradas finales de Metrobús: {len(stops_f)}")
+
+    # --- 6. SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES (Corrige días de fin de semana) ---
     valid_service_ids = set(trips_f["service_id"])
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
@@ -138,12 +142,12 @@ def main():
         print("Sintetizando la tabla 'calendar' desde las fechas reales de 'calendar_dates'…")
         service_days = {}
         for _, row in calendar_dates_f.iterrows():
-            if row.get("exception_type") == "1":
+            if row.get("exception_type") == "1":  # Servicio activo
                 sid = row["service_id"]
                 dt_str = row["date"]
                 try:
                     dt = datetime.datetime.strptime(dt_str, "%Y%m%d")
-                    day_idx = dt.weekday()
+                    day_idx = dt.weekday()  # 0=Lunes, 1=Martes, ..., 6=Domingo
                     if sid not in service_days:
                         service_days[sid] = [0] * 7
                     service_days[sid][day_idx] = 1
@@ -168,7 +172,7 @@ def main():
     else:
         calendar_f = calendar[calendar["service_id"].isin(valid_service_ids)].copy() if not calendar.empty else calendar
 
-    # 7. Volcar a SQLite
+    # --- 7. Volcar a SQLite ---
     if OUTPUT_DB.exists():
         OUTPUT_DB.unlink()
 
@@ -185,6 +189,7 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
+    # Crear índices para optimizar la velocidad de la API
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
         "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
@@ -195,13 +200,15 @@ def main():
 
     if not calendar_f.empty:
         indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);")
+    if not calendar_dates_f.empty:
+        indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_dates_service_id ON calendar_dates(service_id);")
 
     conn.executescript("\n".join(indexes))
     conn.commit()
     conn.close()
 
     size_mb = OUTPUT_DB.stat().st_size / (1024 * 1024)
-    print(f"\n¡Base de datos limpia generada con éxito! → {OUTPUT_DB} ({size_mb:.1f} MB)")
+    print(f"\n¡Base de datos limpia de Metrobús generada! → {OUTPUT_DB} ({size_mb:.1f} MB)")
 
 
 if __name__ == "__main__":
