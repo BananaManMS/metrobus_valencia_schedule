@@ -1,1 +1,1 @@
-{"id":"140200207","name":"CV-350 km 11,25 asc - El Collado (a demanda)","lat":39.961729,"lon":-1.03915,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"140200207","name":"CV-350 km 11,25 asc - El Collado (a demanda)","lat":39.961729,"lon":-1.03915,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L402","trip_id":"2782671771","departure_time":"18:17:00","stop_sequence":"7","service_id":"140200201","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

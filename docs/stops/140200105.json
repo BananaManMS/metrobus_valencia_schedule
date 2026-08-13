@@ -1,1 +1,1 @@
-{"id":"140200105","name":"Pl. Soldado Juan Aliaga, 2 (a demanda)","lat":39.891072,"lon":-0.961591,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"140200105","name":"Pl. Soldado Juan Aliaga, 2 (a demanda)","lat":39.891072,"lon":-0.961591,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L402","trip_id":"2782671755","departure_time":"06:54:00","stop_sequence":"5","service_id":"140200101","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

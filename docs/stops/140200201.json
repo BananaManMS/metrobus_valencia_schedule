@@ -1,1 +1,1 @@
-{"id":"140200201","name":"Av. Rojas Clemente, 57 (a demanda)","lat":39.866908,"lon":-1.082731,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"140200201","name":"Av. Rojas Clemente, 57 (a demanda)","lat":39.866908,"lon":-1.082731,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L402","trip_id":"2782671771","departure_time":"17:30:00","stop_sequence":"1","service_id":"140200201","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

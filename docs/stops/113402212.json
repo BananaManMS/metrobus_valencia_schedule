@@ -1,1 +1,1 @@
-{"id":"113402212","name":"C. La Pau, 70","lat":39.59613,"lon":-0.589974,"lines":[{"line":"L134B","days":["Domingo"]}]}
+{"id":"113402212","name":"C. La Pau, 70","lat":39.59613,"lon":-0.589974,"lines":[{"line":"L134B","days":["Domingo"]}],"departures":[{"line":"L134B","trip_id":"2784381198","departure_time":"08:24:00","stop_sequence":"13","service_id":"113402204","days":["Domingo"]},{"line":"L134B","trip_id":"2784381199","departure_time":"15:24:00","stop_sequence":"13","service_id":"113402204","days":["Domingo"]}]}

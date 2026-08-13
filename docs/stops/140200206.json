@@ -1,1 +1,1 @@
-{"id":"140200206","name":"CV-350 km 6,8 asc (a demanda)","lat":39.932897,"lon":-1.005484,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"140200206","name":"CV-350 km 6,8 asc (a demanda)","lat":39.932897,"lon":-1.005484,"lines":[{"line":"L402","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L402","trip_id":"2782671771","departure_time":"18:11:00","stop_sequence":"6","service_id":"140200201","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

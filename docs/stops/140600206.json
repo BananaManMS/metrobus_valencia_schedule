@@ -1,1 +1,1 @@
-{"id":"140600206","name":"CV-339 km 11,2 asc","lat":39.725582,"lon":-0.669421,"lines":[{"line":"L406","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"140600206","name":"CV-339 km 11,2 asc","lat":39.725582,"lon":-0.669421,"lines":[{"line":"L406","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L406","trip_id":"2782623956","departure_time":"18:15:00","stop_sequence":"6","service_id":"140600201","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

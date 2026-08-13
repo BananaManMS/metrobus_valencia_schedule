@@ -1,1 +1,1 @@
-{"id":"5252010127","name":"C/ San Vicente Mártir, 139 [València]","lat":39.4628439991,"lon":-0.382122,"lines":[{"line":"L186B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"5252010127","name":"C/ San Vicente Mártir, 139 [València]","lat":39.4628439991,"lon":-0.382122,"lines":[{"line":"L186B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}],"departures":[{"line":"L186B","trip_id":"2782704392","departure_time":"07:32:00","stop_sequence":"14","service_id":"925918620201","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

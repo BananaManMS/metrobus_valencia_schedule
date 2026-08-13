@@ -1,1 +1,1 @@
-{"id":"5254010128","name":"Av. Vicente Lassala, 28","lat":39.423283,"lon":-0.684351,"lines":[{"line":"L434","days":["Martes","Jueves","Sábado"]}]}
+{"id":"5254010128","name":"Av. Vicente Lassala, 28","lat":39.423283,"lon":-0.684351,"lines":[{"line":"L434","days":["Martes","Jueves","Sábado"]}],"departures":[{"line":"L434","trip_id":"2784153740","departure_time":"19:20:00","stop_sequence":"3","service_id":"143400201","days":["Martes","Jueves"]},{"line":"L434","trip_id":"2784336368","departure_time":"19:20:00","stop_sequence":"3","service_id":"143400202","days":["Sábado"]}]}
