@@ -1,7 +1,6 @@
 """
-Carga el 100% del GTFS de la Generalitat en metrobus.sqlite.
-Limpia encabezados y valores directamente en Python para que los
-índices de SQLite funcionen a máxima velocidad.
+Carga el 100% de los datos del GTFS de la Generalitat Valenciana en metrobus.sqlite.
+Sintetiza la tabla 'calendar' desde 'calendar_dates.txt' respetando el esquema exacto.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -51,52 +50,40 @@ def download_gtfs() -> zipfile.ZipFile:
     raise SystemExit("❌ Error crítico: No se pudo descargar el GTFS y no existe gtfs_fallback.zip")
 
 
-def load_flexible(zf: zipfile.ZipFile, target_base_name: str) -> pd.DataFrame:
-    target = target_base_name.lower().replace(".txt", "").replace(".csv", "")
-    
-    matched_file = None
+def load_file(zf: zipfile.ZipFile, target_name: str) -> pd.DataFrame:
+    """Busca y carga un archivo en el ZIP sin importar mayúsculas o extensiones."""
+    target_clean = target_name.lower().replace(".txt", "").replace(".csv", "")
     for name in zf.namelist():
         basename = Path(name).name.lower().replace(".txt", "").replace(".csv", "")
-        if basename == target:
-            matched_file = name
-            break
+        if basename == target_clean:
+            with zf.open(name) as f:
+                df = pd.read_csv(f, dtype=str, keep_default_na=False, encoding="utf-8-sig")
+                df.columns = df.columns.astype(str).str.strip().str.replace('\ufeff', '')
+                for col in df.columns:
+                    df[col] = df[col].astype(str).str.strip()
+                print(f"  ✓ Cargado '{name}': {len(df)} filas")
+                return df
 
-    if matched_file:
-        with zf.open(matched_file) as f:
-            df = pd.read_csv(f, dtype=str, keep_default_na=False, encoding="utf-8-sig")
-            # Eliminar caracteres BOM \ufeff y espacios en nombres de columnas
-            df.columns = df.columns.astype(str).str.strip().str.replace('\ufeff', '')
-            # Limpiar espacios en blanco en todos los valores
-            for col in df.columns:
-                df[col] = df[col].astype(str).str.strip()
-            print(f"  ✓ Cargado '{matched_file}': {len(df)} filas")
-            return df
-
-    print(f"  ⚠️ No se encontró '{target_base_name}' en el zip.")
+    print(f"  ⚠️ No se encontró '{target_name}' en el zip.")
     return pd.DataFrame()
 
 
 def main():
     zf = download_gtfs()
 
-    print("\nCargando el 100% de los archivos del GTFS...")
-    agency = load_flexible(zf, "agency.txt")
-    routes = load_flexible(zf, "routes.txt")
-    trips = load_flexible(zf, "trips.txt")
-    stop_times = load_flexible(zf, "stop_times")
-    stops = load_flexible(zf, "stops.txt")
-    calendar = load_flexible(zf, "calendar.txt")
-    calendar_dates = load_flexible(zf, "calendar_dates.txt")
+    print("\nCargando archivos del GTFS...")
+    agency = load_file(zf, "agency.txt")
+    routes = load_file(zf, "routes.txt")
+    trips = load_file(zf, "trips.txt")
+    stop_times = load_file(zf, "stop_times")
+    stops = load_file(zf, "stops.txt")
+    calendar_dates = load_file(zf, "calendar_dates.txt")
 
     if stops.empty or stop_times.empty or trips.empty:
-        raise SystemExit("❌ Error: No se pudieron cargar los archivos esenciales (stops, stop_times, trips).")
+        raise SystemExit("❌ Error: No se pudieron cargar los archivos esenciales.")
 
-    # --- SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES ---
-    all_service_ids = set(trips["service_id"]).union(
-        set(calendar_dates["service_id"]) if not calendar_dates.empty else set()
-    )
-    existing_calendar_ids = set(calendar["service_id"]) if not calendar.empty else set()
-
+    # --- SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES.TXT ---
+    print("\nSintetizando 'calendar' a partir de 'calendar_dates.txt'...")
     service_days = {}
     if not calendar_dates.empty and "service_id" in calendar_dates.columns and "date" in calendar_dates.columns:
         for _, row in calendar_dates.iterrows():
@@ -105,42 +92,34 @@ def main():
                 dt_str = row["date"]
                 try:
                     dt = datetime.datetime.strptime(dt_str, "%Y%m%d")
-                    day_idx = dt.weekday()
+                    day_idx = dt.weekday()  # 0=Lunes, ..., 6=Domingo
                     if sid not in service_days:
                         service_days[sid] = [0] * 7
                     service_days[sid][day_idx] = 1
                 except Exception:
                     pass
 
+    all_service_ids = set(trips["service_id"]).union(
+        set(calendar_dates["service_id"]) if not calendar_dates.empty else set()
+    )
+
     calendar_rows = []
-    if not calendar.empty:
-        for _, row in calendar.iterrows():
-            calendar_rows.append({
-                "service_id": str(row["service_id"]).strip(),
-                "monday": int(row.get("monday", 1)),
-                "tuesday": int(row.get("tuesday", 1)),
-                "wednesday": int(row.get("wednesday", 1)),
-                "thursday": int(row.get("thursday", 1)),
-                "friday": int(row.get("friday", 1)),
-                "saturday": int(row.get("saturday", 1)),
-                "sunday": int(row.get("sunday", 1)),
-            })
-
     for sid in all_service_ids:
-        if sid not in existing_calendar_ids:
-            days = service_days.get(sid, [1, 1, 1, 1, 1, 1, 1])
-            calendar_rows.append({
-                "service_id": str(sid).strip(),
-                "monday": days[0],
-                "tuesday": days[1],
-                "wednesday": days[2],
-                "thursday": days[3],
-                "friday": days[4],
-                "saturday": days[5],
-                "sunday": days[6],
-            })
+        days = service_days.get(sid, [1, 1, 1, 1, 1, 1, 1])
+        if sum(days) == 0:
+            days = [1, 1, 1, 1, 1, 1, 1]
+        calendar_rows.append({
+            "service_id": str(sid).strip(),
+            "monday": days[0],
+            "tuesday": days[1],
+            "wednesday": days[2],
+            "thursday": days[3],
+            "friday": days[4],
+            "saturday": days[5],
+            "sunday": days[6],
+        })
 
-    calendar_f = pd.DataFrame(calendar_rows)
+    calendar_df = pd.DataFrame(calendar_rows)
 
     # --- VOLCAR A SQLITE ---
     if OUTPUT_DB.exists():
@@ -148,43 +127,32 @@ def main():
 
     conn = sqlite3.connect(OUTPUT_DB)
 
-    if not agency.empty:
-        agency.to_sql("agency", conn, index=False)
-    if not routes.empty:
-        routes.to_sql("routes", conn, index=False)
-    if not trips.empty:
-        trips.to_sql("trips", conn, index=False)
-    if not stops.empty:
-        stops.to_sql("stops", conn, index=False)
-    if not stop_times.empty:
-        stop_times.to_sql("stop_times", conn, index=False)
-    if not calendar_f.empty:
-        calendar_f.to_sql("calendar", conn, index=False)
+    agency.to_sql("agency", conn, index=False)
+    routes.to_sql("routes", conn, index=False)
+    trips.to_sql("trips", conn, index=False)
+    stops.to_sql("stops", conn, index=False)
+    stop_times.to_sql("stop_times", conn, index=False)
+    calendar_df.to_sql("calendar", conn, index=False)
     if not calendar_dates.empty:
         calendar_dates.to_sql("calendar_dates", conn, index=False)
 
-    # Crear índices limpios para búsquedas ultrarrápidas
-    indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
-        "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
-        "CREATE INDEX IF NOT EXISTS idx_trips_trip_id ON trips(trip_id);",
-        "CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);",
-        "CREATE INDEX IF NOT EXISTS idx_routes_route_id ON routes(route_id);",
-    ]
-
-    if not routes.empty and "agency_id" in routes.columns:
-        indexes.append("CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);")
-    if not stops.empty and "parent_station" in stops.columns:
-        indexes.append("CREATE INDEX IF NOT EXISTS idx_stops_parent ON stops(parent_station);")
-    if not calendar_f.empty:
-        indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);")
-
-    conn.executescript("\n".join(indexes))
+    # Índices para consultas instantáneas
+    conn.executescript("""
+        CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);
+        CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);
+        CREATE INDEX IF NOT EXISTS idx_trips_trip_id ON trips(trip_id);
+        CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);
+        CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);
+        CREATE INDEX IF NOT EXISTS idx_routes_route_id ON routes(route_id);
+        CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);
+        CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);
+        CREATE INDEX IF NOT EXISTS idx_stops_stop_id ON stops(stop_id);
+    """)
     conn.commit()
     conn.close()
 
     size_mb = OUTPUT_DB.stat().st_size / (1024 * 1024)
-    print(f"\n¡Base de datos generada e indexada! → {OUTPUT_DB} ({size_mb:.1f} MB)")
+    print(f"\n¡Base de datos generada con éxito! → {OUTPUT_DB} ({size_mb:.1f} MB)")
     print(f"Total paradas importadas a SQLite: {len(stops)}")
 
 
