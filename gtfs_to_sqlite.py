@@ -1,7 +1,8 @@
 """
-Descarga el GTFS de la Generalitat Valenciana, filtra las agencias de Metrobús
-(incluyendo conectores metropolitanos y rutas con agency_id vacío),
-fuerza la síntesis de 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
+Descarga el GTFS de la Generalitat Valenciana, filtra las agencias de Metrobús,
+sintetiza 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
+
+A prueba de columnas opcionales ausentes (como parent_station).
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -26,7 +27,6 @@ GTFS_URL = (
 FALLBACK_ZIP = Path("./gtfs_fallback.zip")
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Agencias oficiales del Área Metropolitana de València (incluyendo La Ribera)
 METROBUS_AGENCIES = {
     "VALENCIA METROPOLITANA NORD",
     "VALENCIA METROPOLITANA NORD-OEST",
@@ -113,7 +113,7 @@ def main():
     valid_agency_ids = set(agency_f["agency_id"]) if "agency_id" in agency_f.columns else set()
     print(f"Agencias seleccionadas: {len(agency_f)}")
 
-    # 2. Filtrar rutas (Acepta las de agencias válidas O las que vienen con agency_id vacío/nulo)
+    # 2. Filtrar rutas
     if "agency_id" in routes.columns:
         routes_f = routes[routes["agency_id"].isin(valid_agency_ids) | (routes["agency_id"] == "")].copy()
     else:
@@ -131,7 +131,7 @@ def main():
     stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
     valid_stop_ids = set(stop_times_f["stop_id"])
 
-    # 5. Filtrar stops e incluir explícitamente paradas padre
+    # 5. Filtrar stops e incluir paradas padre solo si la columna existe
     if "parent_station" in stops.columns:
         parents = set(stops[stops["stop_id"].isin(valid_stop_ids)]["parent_station"])
         parents.discard("")
@@ -140,7 +140,7 @@ def main():
     stops_f = stops[stops["stop_id"].isin(valid_stop_ids)].copy()
     print(f"Paradas finales de Metrobús: {len(stops_f)}")
 
-    # 6. SINTETIZAR CALENDAR OBLIGATORIAMENTE DESDE CALENDAR_DATES
+    # 6. SINTETIZAR CALENDAR DESDE CALENDAR_DATES
     valid_service_ids = set(trips_f["service_id"])
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
@@ -192,14 +192,17 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
+    # Crear índices de forma dinámica e insensibles a columnas opcionales
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
         "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
         "CREATE INDEX IF NOT EXISTS idx_trips_route_id ON trips(route_id);",
         "CREATE INDEX IF NOT EXISTS idx_trips_service_id ON trips(service_id);",
         "CREATE INDEX IF NOT EXISTS idx_routes_agency_id ON routes(agency_id);",
-        "CREATE INDEX IF NOT EXISTS idx_stops_parent ON stops(parent_station);",
     ]
+
+    if "parent_station" in stops_f.columns:
+        indexes.append("CREATE INDEX IF NOT EXISTS idx_stops_parent ON stops(parent_station);")
 
     if not calendar_f.empty:
         indexes.append("CREATE INDEX IF NOT EXISTS idx_calendar_service_id ON calendar(service_id);")
