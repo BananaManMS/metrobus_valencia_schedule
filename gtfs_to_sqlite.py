@@ -3,6 +3,8 @@ Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
 filtra únicamente los operadores del Área Metropolitana de Valencia (Metrobús),
 sintetiza la tabla 'calendar' desde 'calendar_dates' y genera metrobus.sqlite.
 
+A prueba de bloqueos de User-Agent, BOM UTF-8 e inconsistencias de tildes/mayúsculas.
+
 Uso:
   pip install pandas requests --break-system-packages
   python gtfs_to_sqlite.py
@@ -12,6 +14,7 @@ import datetime
 import io
 import sqlite3
 import time
+import unicodedata
 import zipfile
 from pathlib import Path
 
@@ -25,17 +28,17 @@ GTFS_URL = (
 FALLBACK_ZIP = Path("./gtfs_fallback.zip")
 OUTPUT_DB = Path("./metrobus.sqlite")
 
-# Lista oficial de operadores/concesiones de Metrobús (Área Metropolitana de València)
+# Agencias oficiales de Metrobús (lista normalizada)
 METROBUS_AGENCIES = {
-    "València Metropolitana Nord",
-    "València Metropolitana Nord-Oest",
-    "València Metropolitana Oest",
-    "València Metropolitana Sud",
-    "La Hoya de Buñol - València",
-    "Montserrat - València",
-    "La Serranía - València",
-    "Alto Palancia - Sagunt - València",
-    "València - Benifaió",
+    "VALENCIA METROPOLITANA NORD",
+    "VALENCIA METROPOLITANA NORD-OEST",
+    "VALENCIA METROPOLITANA OEST",
+    "VALENCIA METROPOLITANA SUD",
+    "LA HOYA DE BUÑOL - VALENCIA",
+    "MONTSERRAT - VALENCIA",
+    "LA SERRANIA - VALENCIA",
+    "ALTO PALANCIA - SAGUNT - VALENCIA",
+    "VALENCIA - BENIFAIO",
 }
 
 REQUIRED_FILES = [
@@ -47,11 +50,27 @@ REQUIRED_FILES = [
 ]
 
 
+def remove_accents(input_str: str) -> str:
+    """Elimina tildes y convierte a mayúsculas para comparaciones insensibles."""
+    if not input_str:
+        return ""
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    return only_ascii.upper().strip()
+
+
 def download_gtfs() -> zipfile.ZipFile:
     print(f"Intentando descargar GTFS desde {GTFS_URL} …")
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
+    
     for intento in range(1, 4):
         try:
-            resp = requests.get(GTFS_URL, timeout=60)
+            resp = requests.get(GTFS_URL, headers=headers, timeout=60)
             resp.raise_for_status()
             print(f"Descargado con éxito ({len(resp.content) / (1024 * 1024):.1f} MB)")
             return zipfile.ZipFile(io.BytesIO(resp.content))
@@ -69,7 +88,8 @@ def download_gtfs() -> zipfile.ZipFile:
 def load(zf: zipfile.ZipFile, name: str) -> pd.DataFrame:
     if name in zf.namelist():
         with zf.open(name) as f:
-            df = pd.read_csv(f, dtype=str, keep_default_na=False)
+            # Soportar codificación utf-8-sig para eliminar automáticamente marcas BOM (\ufeff)
+            df = pd.read_csv(f, dtype=str, keep_default_na=False, encoding="utf-8-sig")
             for col in df.columns:
                 df[col] = df[col].str.strip()
             return df
@@ -92,15 +112,15 @@ def main():
     calendar = load(zf, "calendar.txt")
     calendar_dates = load(zf, "calendar_dates.txt")
 
-    # --- 1. Filtrar agencias de Metrobús ---
-    agency["agency_name_clean"] = agency["agency_name"].str.strip()
-    agency_f = agency[agency["agency_name_clean"].isin(METROBUS_AGENCIES)].copy()
-    agency_f.drop(columns=["agency_name_clean"], inplace=True)
+    # --- 1. Filtrar agencias de Metrobús (Normalizado insensible a tildes/mayúsculas) ---
+    agency["agency_norm"] = agency["agency_name"].apply(remove_accents)
+    agency_f = agency[agency["agency_norm"].isin(METROBUS_AGENCIES)].copy()
+    agency_f.drop(columns=["agency_norm"], inplace=True)
 
     print(f"Agencias totales: {len(agency)} → Agencias de Metrobús seleccionadas: {len(agency_f)}")
 
     if agency_f.empty:
-        raise SystemExit("Error: No se encontró ninguna agencia coincidente. Revisa los nombres de agency.txt")
+        raise SystemExit("Error: No se encontró ninguna agencia coincidente en agency.txt.")
 
     # --- 2. Filtrar rutas pertenecientes a esas agencias ---
     valid_agency_ids = set(agency_f["agency_id"]) if "agency_id" in agency_f.columns else set()
@@ -121,10 +141,9 @@ def main():
     valid_trip_ids = set(trips_f["trip_id"])
     stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
 
-    # --- 5. Filtrar paradas (stops) utilizadas únicamente por esas líneas ---
+    # --- 5. Filtrar paradas (stops) utilizadas por esas líneas ---
     valid_stop_ids = set(stop_times_f["stop_id"])
 
-    # Incluir también paradas padre si existen en la estructura GTFS
     if "parent_station" in stops.columns:
         parents = set(stops[stops["stop_id"].isin(valid_stop_ids)]["parent_station"])
         parents.discard("")
@@ -134,15 +153,16 @@ def main():
 
     print(f"Paradas totales en GTFS: {len(stops)} → Paradas finales de Metrobús: {len(stops_f)}")
 
-    # --- 6. SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES (Corrige días de fin de semana) ---
+    # --- 6. SINTETIZAR TABLA CALENDAR DESDE CALENDAR_DATES ---
     valid_service_ids = set(trips_f["service_id"])
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
-    if calendar.empty and not calendar_dates_f.empty:
+    # Si calendar.txt no existe o está vacío, se sintetiza a partir de calendar_dates
+    if (calendar.empty or len(calendar) == 0) and not calendar_dates_f.empty:
         print("Sintetizando la tabla 'calendar' desde las fechas reales de 'calendar_dates'…")
         service_days = {}
         for _, row in calendar_dates_f.iterrows():
-            if row.get("exception_type") == "1":  # Servicio activo
+            if str(row.get("exception_type")).strip() == "1":  # Servicio activo
                 sid = row["service_id"]
                 dt_str = row["date"]
                 try:
@@ -189,7 +209,6 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
-    # Crear índices para optimizar la velocidad de la API
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
         "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
