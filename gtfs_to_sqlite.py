@@ -1,7 +1,7 @@
 """
 Descarga el GTFS de transporte interurbano de la Generalitat Valenciana,
 carga todos los calendarios, rutas y paradas, y genera metrobus.sqlite
-de forma completa sin descartar paradas intermedias ni cabeceras.
+de forma completa, incluyendo TODAS las paradas registradas.
 
 Uso:
   pip install pandas requests --break-system-packages
@@ -79,26 +79,17 @@ def main():
 
     print(f"Paradas en el GTFS original: {len(stops)} → válidas: {len(stops_in_box)}")
 
-    valid_stop_ids = set(stops_in_box["stop_id"])
+    # --- 2. MANTENER TODAS LAS PARADAS VÁLIDAS ---
+    # Incluye todas las paradas en SQLite (tengan o no salidas asociadas)
+    stops_f = stops_in_box.copy()
 
-    # --- 2. Buscar expediciones (trips) que pasen por esas paradas ---
-    stop_times_initial = stop_times[stop_times["stop_id"].isin(valid_stop_ids)]
-    valid_trip_ids = set(stop_times_initial["trip_id"])
+    # --- 3. Filtrar expediciones, rutas, agencias y calendarios ---
+    valid_stop_ids = set(stops_f["stop_id"])
+    stop_times_f = stop_times[stop_times["stop_id"].isin(valid_stop_ids)].copy()
 
-    # --- 3. MANTENER TODAS LAS PARADAS DE ESAS EXPEDICIONES ---
-    stop_times_f = stop_times[stop_times["trip_id"].isin(valid_trip_ids)].copy()
+    valid_trip_ids = set(stop_times_f["trip_id"])
     trips_f = trips[trips["trip_id"].isin(valid_trip_ids)].copy()
 
-    # --- 4. Recuperar todas las paradas requeridas (incluyendo estaciones padre) ---
-    final_stop_ids = set(stop_times_f["stop_id"])
-    if "parent_station" in stops.columns:
-        parents = set(stops[stops["stop_id"].isin(final_stop_ids)]["parent_station"])
-        parents.discard("")
-        final_stop_ids.update(parents)
-
-    stops_f = stops[stops["stop_id"].isin(final_stop_ids)].copy()
-
-    # --- 5. Filtrar rutas, agencias y calendarios asociados ---
     valid_route_ids = set(trips_f["route_id"])
     routes_f = routes[routes["route_id"].isin(valid_route_ids)].copy()
 
@@ -109,7 +100,7 @@ def main():
     calendar_f = calendar[calendar["service_id"].isin(valid_service_ids)].copy() if not calendar.empty else calendar
     calendar_dates_f = calendar_dates[calendar_dates["service_id"].isin(valid_service_ids)].copy() if not calendar_dates.empty else calendar_dates
 
-    # --- 6. Volcar a SQLite ---
+    # --- 4. Volcar a SQLite ---
     if OUTPUT_DB.exists():
         OUTPUT_DB.unlink()
 
@@ -126,7 +117,7 @@ def main():
     if not calendar_dates_f.empty:
         calendar_dates_f.to_sql("calendar_dates", conn, index=False)
 
-    # Crear índices dinámicos solo para las tablas existentes
+    # Crear índices para acelerar consultas
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_stop_times_stop_id ON stop_times(stop_id);",
         "CREATE INDEX IF NOT EXISTS idx_stop_times_trip_id ON stop_times(trip_id);",
