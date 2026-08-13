@@ -1,1 +1,1 @@
-{"id":"111000123","lat":39.62397,"lon":-0.303832,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L117N","days":["Viernes","Sábado","Domingo"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"111000123","name":"Ctra. Barcelona, 46","lat":39.62397,"lon":-0.303832,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L117N","days":["Viernes","Sábado","Domingo"]},{"line":"L119N","days":["Sábado"]}]}

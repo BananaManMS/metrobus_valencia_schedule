@@ -1,1 +1,1 @@
-{"id":"111000207","lat":39.623893,"lon":-0.304205,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L117N","days":["Viernes","Sábado","Domingo"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"111000207","name":"Ctra. Barcelona - Av. Catalunya","lat":39.623893,"lon":-0.304205,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L117N","days":["Viernes","Sábado","Domingo"]},{"line":"L119N","days":["Sábado"]}]}

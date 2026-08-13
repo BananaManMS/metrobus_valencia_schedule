@@ -1,1 +1,1 @@
-{"id":"118601115","lat":39.39175,"lon":-0.403173,"lines":[{"line":"L186A","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L186B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}
+{"id":"118601115","name":"Estación ADIF","lat":39.39175,"lon":-0.403173,"lines":[{"line":"L186A","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L186B","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]}]}

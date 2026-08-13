@@ -1,1 +1,1 @@
-{"id":"111000228","lat":39.516424,"lon":-0.361585,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
+{"id":"111000228","name":"Ctra. Barcelona, 75","lat":39.516424,"lon":-0.361585,"lines":[{"line":"L110","days":["Sábado","Domingo"]},{"line":"L111","days":["Lunes","Martes","Miércoles","Jueves","Viernes"]},{"line":"L119N","days":["Sábado"]}]}
