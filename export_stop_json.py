@@ -2,9 +2,7 @@
 Genera un archivo JSON por cada parada a partir de metrobus.sqlite,
 listo para servirse como API estática con GitHub Pages.
 
-Cada archivo docs/stops/<stop_id>.json contiene la información de la
-parada, sus líneas asociadas y todas sus salidas programadas con la máscara
-de días (monday...sunday) para filtrado dinámico en cliente.
+Muestra en 'lines' únicamente los códigos/números de línea (ej. ["L150", "L160"]).
 
 Uso:
   pip install --break-system-packages
@@ -29,7 +27,6 @@ def main():
         shutil.rmtree(OUTPUT_DIR)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Evita que GitHub Pages intente procesar la carpeta con Jekyll
     (OUTPUT_DIR.parent / ".nojekyll").touch()
 
     conn = sqlite3.connect(DB_PATH)
@@ -51,21 +48,52 @@ def main():
     has_calendar = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}.issubset(calendar_cols)
     has_parent_station = "parent_station" in stops_cols
 
-    route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "NULL"
+    route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "r.route_id"
     route_long_expr = "r.route_long_name" if "route_long_name" in routes_cols else "NULL"
     route_color_expr = "r.route_color" if "route_color" in routes_cols else "NULL"
     agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
 
+    # 1. Mapa de paradas hijo a estación padre (si la columna parent_station existe)
+    parent_map = {}
+    if has_parent_station:
+        parent_rows = conn.execute(
+            "SELECT stop_id, parent_station FROM stops WHERE parent_station IS NOT NULL AND parent_station != ''"
+        ).fetchall()
+        for pr in parent_rows:
+            parent_map[str(pr["stop_id"]).strip()] = str(pr["parent_station"]).strip()
+
+    # 2. Consultar números/códigos de línea por cada parada
+    lines_rows = conn.execute(f"""
+        SELECT DISTINCT
+            st.stop_id,
+            COALESCE(NULLIF({route_short_expr}, ''), {route_long_expr}, r.route_id) AS route_code
+        FROM stop_times st
+        JOIN trips t  ON t.trip_id = st.trip_id
+        JOIN routes r ON r.route_id = t.route_id
+    """).fetchall()
+
+    lines_by_stop = {}
+    for row in lines_rows:
+        s_id = str(row["stop_id"]).strip()
+        line_code = (row["route_code"] or "").strip()
+        if line_code:
+            lines_by_stop.setdefault(s_id, set()).add(line_code)
+            if s_id in parent_map:
+                p_id = parent_map[s_id]
+                lines_by_stop.setdefault(p_id, set()).add(line_code)
+
+    for s_id, lines_set in lines_by_stop.items():
+        lines_by_stop[s_id] = sorted(list(lines_set))
+
+    # 3. Determinar destino (headsign)
     if not has_headsign:
-        print("Aviso: el GTFS no trae trip_headsign — se usará "
-              "route_long_name (o la última parada del trayecto) como destino.")
         conn.execute("""
             CREATE TEMP TABLE IF NOT EXISTS trip_last_stop AS
             SELECT st.trip_id, s.stop_name AS last_stop_name
             FROM stop_times st
             JOIN stops s ON s.stop_id = st.stop_id
             WHERE st.stop_sequence = (
-                SELECT MAX(st2.stop_sequence)
+                SELECT MAX(CAST(st2.stop_sequence AS INTEGER))
                 FROM stop_times st2
                 WHERE st2.trip_id = st.trip_id
             )
@@ -103,7 +131,7 @@ def main():
             {trip_headsign_expr} AS trip_headsign,
             t.service_id,
             r.route_id,
-            {route_short_expr} AS route_short_name,
+            COALESCE(NULLIF({route_short_expr}, ''), {route_long_expr}, r.route_id) AS route_short_name,
             {route_long_expr} AS route_long_name,
             {route_color_expr} AS route_color,
             {agency_name_expr} AS agency_name,
@@ -119,28 +147,6 @@ def main():
     """
 
     print(f"Generando JSON para {len(stops)} paradas…")
-
-    lines_by_stop = {}
-    lines_rows = conn.execute(f"""
-        SELECT DISTINCT
-            st.stop_id,
-            {route_short_expr} AS route_short_name,
-            r.route_id,
-            {route_color_expr} AS route_color
-        FROM stop_times st
-        JOIN trips t  ON t.trip_id = st.trip_id
-        JOIN routes r ON r.route_id = t.route_id
-    """).fetchall()
-
-    for row in lines_rows:
-        lines_by_stop.setdefault(row["stop_id"], []).append({
-            "route_id": str(row["route_id"]),
-            "route_short_name": row["route_short_name"] or "",
-            "route_color": row["route_color"] or "",
-        })
-
-    for stop_id, lines in lines_by_stop.items():
-        lines.sort(key=lambda l: (l["route_short_name"] or ""))
 
     stops_index = []
 
