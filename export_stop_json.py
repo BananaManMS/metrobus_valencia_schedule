@@ -1,8 +1,6 @@
 """
 Genera un archivo JSON por cada parada a partir de metrobus.sqlite
-de forma indexada y rápida.
-
-Muestra en 'lines' únicamente los códigos/números de línea (ej. ["L150", "L160"]).
+de forma rápida e indexada.
 
 Uso:
   pip install --break-system-packages
@@ -37,36 +35,29 @@ def main():
         FROM stops
     """).fetchall()
 
-    tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    stops_cols = {row[1] for row in conn.execute("PRAGMA table_info(stops)")} if "stops" in tables else set()
-    trips_cols = {row[1] for row in conn.execute("PRAGMA table_info(trips)")} if "trips" in tables else set()
-    routes_cols = {row[1] for row in conn.execute("PRAGMA table_info(routes)")} if "routes" in tables else set()
-    agency_cols = {row[1] for row in conn.execute("PRAGMA table_info(agency)")} if "agency" in tables else set()
-    calendar_cols = {row[1] for row in conn.execute("PRAGMA table_info(calendar)")} if "calendar" in tables else set()
+    # 1. Crear tabla temporal ultrarrápida con el nombre de la última parada de cada trip (como destino)
+    conn.execute("""
+        CREATE TEMP TABLE trip_last_stop AS
+        SELECT trip_id, stop_name AS last_stop_name
+        FROM (
+            SELECT
+                st.trip_id,
+                s.stop_name,
+                ROW_NUMBER() OVER (
+                    PARTITION BY st.trip_id
+                    ORDER BY CAST(st.stop_sequence AS INTEGER) DESC
+                ) AS rn
+            FROM stop_times st
+            JOIN stops s ON s.stop_id = st.stop_id
+        )
+        WHERE rn = 1;
+    """)
 
-    has_headsign = "trip_headsign" in trips_cols
-    has_calendar = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}.issubset(calendar_cols)
-    has_parent_station = "parent_station" in stops_cols
-
-    route_short_expr = "r.route_short_name" if "route_short_name" in routes_cols else "r.route_id"
-    route_long_expr = "r.route_long_name" if "route_long_name" in routes_cols else "NULL"
-    route_color_expr = "r.route_color" if "route_color" in routes_cols else "NULL"
-    agency_name_expr = "a.agency_name" if "agency_name" in agency_cols else "NULL"
-
-    # 1. Mapa de paradas hijo a estación padre
-    parent_map = {}
-    if has_parent_station:
-        parent_rows = conn.execute(
-            "SELECT stop_id, parent_station FROM stops WHERE parent_station IS NOT NULL AND parent_station != ''"
-        ).fetchall()
-        for pr in parent_rows:
-            parent_map[str(pr["stop_id"])] = str(pr["parent_station"])
-
-    # 2. Consultar números/códigos de línea por cada parada
-    lines_rows = conn.execute(f"""
+    # 2. Consultar únicamente los códigos de línea por cada parada
+    lines_rows = conn.execute("""
         SELECT DISTINCT
             st.stop_id,
-            COALESCE(NULLIF({route_short_expr}, ''), {route_long_expr}, r.route_id) AS route_code
+            COALESCE(NULLIF(r.route_short_name, ''), r.route_id) AS route_code
         FROM stop_times st
         JOIN trips t  ON t.trip_id = st.trip_id
         JOIN routes r ON r.route_id = t.route_id
@@ -78,76 +69,37 @@ def main():
         line_code = (row["route_code"] or "").strip()
         if line_code:
             lines_by_stop.setdefault(s_id, set()).add(line_code)
-            if s_id in parent_map:
-                p_id = parent_map[s_id]
-                lines_by_stop.setdefault(p_id, set()).add(line_code)
 
     for s_id, lines_set in lines_by_stop.items():
         lines_by_stop[s_id] = sorted(list(lines_set))
 
-    # 3. Determinar destino (headsign) si no existe trip_headsign
-    if not has_headsign:
-        conn.execute("""
-            CREATE TEMP TABLE IF NOT EXISTS trip_last_stop AS
-            SELECT st.trip_id, s.stop_name AS last_stop_name
-            FROM stop_times st
-            JOIN stops s ON s.stop_id = st.stop_id
-            WHERE st.stop_sequence = (
-                SELECT MAX(st2.stop_sequence)
-                FROM stop_times st2
-                WHERE st2.trip_id = st.trip_id
-            )
-        """)
-        headsign_candidates = []
-        if "trip_headsign" in trips_cols:
-            headsign_candidates.append("t.trip_headsign")
-        if "route_long_name" in routes_cols:
-            headsign_candidates.append("r.route_long_name")
-        headsign_candidates.append("tls.last_stop_name")
-        trip_headsign_expr = f"COALESCE({', '.join(headsign_candidates)})"
-    else:
-        trip_headsign_expr = "t.trip_headsign"
-
-    calendar_select = """
-        COALESCE(c.monday, 1) AS monday,
-        COALESCE(c.tuesday, 1) AS tuesday,
-        COALESCE(c.wednesday, 1) AS wednesday,
-        COALESCE(c.thursday, 1) AS thursday,
-        COALESCE(c.friday, 1) AS friday,
-        COALESCE(c.saturday, 1) AS saturday,
-        COALESCE(c.sunday, 1) AS sunday
-    """ if has_calendar else """
-        1 AS monday, 1 AS tuesday, 1 AS wednesday, 1 AS thursday, 1 AS friday, 1 AS saturday, 1 AS sunday
-    """
-
-    calendar_join = "LEFT JOIN calendar c ON c.service_id = t.service_id" if has_calendar else ""
-    
-    where_clause = """
-        WHERE st.stop_id = ? 
-           OR st.stop_id IN (SELECT stop_id FROM stops WHERE parent_station = ?)
-    """ if has_parent_station else "WHERE st.stop_id = ?"
-
-    # Consulta SQL directa ultra-optimizada con índice de SQLite
-    departures_sql = f"""
+    # 3. Consulta optimizada para extraer las salidas de cada parada
+    departures_sql = """
         SELECT DISTINCT
             COALESCE(NULLIF(st.departure_time, ''), NULLIF(st.arrival_time, ''), '00:00:00') AS departure_time,
             st.stop_sequence,
             st.trip_id,
-            {trip_headsign_expr} AS trip_headsign,
+            COALESCE(NULLIF(r.route_long_name, ''), tls.last_stop_name, r.route_short_name, '') AS trip_headsign,
             t.service_id,
             r.route_id,
-            COALESCE(NULLIF({route_short_expr}, ''), {route_long_expr}, r.route_id) AS route_short_name,
-            {route_long_expr} AS route_long_name,
-            {route_color_expr} AS route_color,
-            {agency_name_expr} AS agency_name,
-            {calendar_select}
+            COALESCE(NULLIF(r.route_short_name, ''), r.route_id) AS route_short_name,
+            COALESCE(r.route_long_name, '') AS route_long_name,
+            '' AS route_color,
+            COALESCE(a.agency_name, '') AS agency_name,
+            COALESCE(c.monday, 1) AS monday,
+            COALESCE(c.tuesday, 1) AS tuesday,
+            COALESCE(c.wednesday, 1) AS wednesday,
+            COALESCE(c.thursday, 1) AS thursday,
+            COALESCE(c.friday, 1) AS friday,
+            COALESCE(c.saturday, 1) AS saturday,
+            COALESCE(c.sunday, 1) AS sunday
         FROM stop_times st
-        LEFT JOIN trips t   ON t.trip_id = st.trip_id
-        LEFT JOIN routes r  ON r.route_id = t.route_id
+        JOIN trips t        ON t.trip_id = st.trip_id
+        JOIN routes r       ON r.route_id = t.route_id
         LEFT JOIN agency a  ON a.agency_id = r.agency_id
-        {calendar_join}
-        {"LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id" if not has_headsign else ""}
-        {where_clause}
+        LEFT JOIN calendar c ON c.service_id = t.service_id
+        LEFT JOIN trip_last_stop tls ON tls.trip_id = t.trip_id
+        WHERE st.stop_id = ?
         ORDER BY departure_time
     """
 
@@ -158,8 +110,7 @@ def main():
     for stop in stops:
         stop_id = str(stop["stop_id"]).strip()
 
-        params = (stop_id, stop_id) if has_parent_station else (stop_id,)
-        departures = conn.execute(departures_sql, params).fetchall()
+        departures = conn.execute(departures_sql, (stop_id,)).fetchall()
         lines = lines_by_stop.get(stop_id, [])
 
         stop_json = {
