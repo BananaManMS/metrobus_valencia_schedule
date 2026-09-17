@@ -1,10 +1,10 @@
 {
   "_descripcion_campos": {
-    "concesion": "Código oficial de la concesión administrativa.",
-    "line_code": "Código comercial de la línea.",
-    "route_id": "ID interno de la ruta en la API de Softour.",
-    "route_long_name": "Descripción del itinerario de la línea.",
-    "route_short_name": "Nombre corto oficial."
+    "concesion": "Código oficial de la concesión administrativa (ej. CV102, CV106).",
+    "line_code": "Código comercial de la línea para matching en la app (ej. 170B).",
+    "route_id": "Identificador interno de la ruta en la API de Softour.",
+    "route_long_name": "Descripción completa de la ruta e itinerario.",
+    "route_short_name": "Nombre corto oficial de la ruta."
   },
   "lines": [
     {

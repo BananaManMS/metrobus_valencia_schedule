@@ -1,7 +1,7 @@
 {
   "_descripcion_campos": {
-    "lines": "Líneas comerciales asignadas.",
-    "parent_station": "(Opcional) Identificador del nodo/estación nodriza.",
+    "lines": "Códigos de líneas comerciales que operan en la parada.",
+    "parent_station": "(Opcional) Identificador del nodo/estación nodriza padre.",
     "stop_id": "Identificador numérico único de la parada en Metrobús.",
     "stop_lat": "Latitud WGS84.",
     "stop_lon": "Longitud WGS84.",
