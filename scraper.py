@@ -11,7 +11,9 @@ URL_ROUTE_SHAPES = "https://api.softoursistemas.com/metrobus/routes/{route_id}/s
 CONCURRENCIA = 15
 
 def encode_polyline(coordinates):
-    """Convierte coordenadas GeoJSON [[lon, lat], ...] a Encoded Polyline."""
+    """
+    Convierte una lista GeoJSON [[lon, lat], ...] al formato estándar Encoded Polyline.
+    """
     if not coordinates:
         return ""
     result = []
@@ -33,8 +35,8 @@ def encode_polyline(coordinates):
 
 def guardar_json_si_cambia(ruta_archivo, nuevo_contenido):
     """
-    Compara el hash SHA-256 del archivo existente con el nuevo.
-    Solo escribe en disco si hay diferencias reales en los datos.
+    Compara el hash SHA-256 del contenido generado con el existente en disco.
+    Solo escribe en el sistema de archivos si hay cambios reales en los datos.
     Devuelve True si se actualizó, False si era idéntico.
     """
     nuevo_texto = json.dumps(nuevo_contenido, ensure_ascii=False, indent=2, sort_keys=True)
@@ -53,7 +55,7 @@ def guardar_json_si_cambia(ruta_archivo, nuevo_contenido):
     return True
 
 # -------------------------------------------------------------------------
-# FASE 1: Obtener parada y censo de líneas
+# FASE 1: Obtener paradas y censo de líneas
 # -------------------------------------------------------------------------
 async def fetch_stop_and_lines(session, sem, raw_stop):
     stop_id = str(raw_stop.get("stop_id") or raw_stop.get("stop_code") or raw_stop.get("_id") or "").strip()
@@ -127,14 +129,15 @@ async def fetch_shape_direction(session, sem, route_id, concesion, direction):
 async def main():
     sem = asyncio.Semaphore(CONCURRENCIA)
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    
-    os.makedirs("data/shapes", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
 
     async with aiohttp.ClientSession(headers=headers) as session:
+        # 1. Descargar catálogo base de paradas
         print("1. Descargando paradas base...")
         async with session.get(URL_STOPS_BASE) as resp:
             raw_stops = await resp.json()
 
+        # 2. Consultar líneas activas para cada parada
         print(f"2. Escaneando {len(raw_stops)} paradas...")
         stop_tasks = [fetch_stop_and_lines(session, sem, s) for s in raw_stops]
         stops_results = await asyncio.gather(*stop_tasks)
@@ -149,11 +152,11 @@ async def main():
                 if code not in catalogo_lineas:
                     catalogo_lineas[code] = m
 
-        # Orden determinista de paradas por stop_id numérico/alfanumérico
+        # Orden determinista para paradas
         paradas_finales.sort(key=lambda x: int(x["stop_id"]) if x["stop_id"].isdigit() else x["stop_id"])
 
         # -----------------------------------------------------------------
-        # GUARDAR: data/metrobus_stops.json
+        # ARCHIVO 1: data/metrobus_stops.json
         # -----------------------------------------------------------------
         doc_stops = {
             "_descripcion_campos": {
@@ -161,8 +164,8 @@ async def main():
                 "stop_name": "Nombre oficial de la parada.",
                 "stop_lat": "Latitud WGS84.",
                 "stop_lon": "Longitud WGS84.",
-                "lines": "Líneas comerciales asignadas.",
-                "parent_station": "(Opcional) Identificador del nodo/estación nodriza."
+                "lines": "Códigos de líneas comerciales que operan en la parada.",
+                "parent_station": "(Opcional) Identificador del nodo/estación nodriza padre."
             },
             "stops": paradas_finales
         }
@@ -171,16 +174,16 @@ async def main():
         print(f"-> data/metrobus_stops.json: {estado_stops}")
 
         # -----------------------------------------------------------------
-        # GUARDAR: data/metrobus_lines.json
+        # ARCHIVO 2: data/metrobus_lines.json
         # -----------------------------------------------------------------
         lineas_ordenadas = [catalogo_lineas[k] for k in sorted(catalogo_lineas.keys())]
         doc_lines = {
             "_descripcion_campos": {
-                "line_code": "Código comercial de la línea.",
-                "route_id": "ID interno de la ruta en la API de Softour.",
-                "concesion": "Código oficial de la concesión administrativa.",
-                "route_short_name": "Nombre corto oficial.",
-                "route_long_name": "Descripción del itinerario de la línea."
+                "line_code": "Código comercial de la línea para matching en la app (ej. 170B).",
+                "route_id": "Identificador interno de la ruta en la API de Softour.",
+                "concesion": "Código oficial de la concesión administrativa (ej. CV102, CV106).",
+                "route_short_name": "Nombre corto oficial de la ruta.",
+                "route_long_name": "Descripción completa de la ruta e itinerario."
             },
             "total_lines": len(lineas_ordenadas),
             "lines": lineas_ordenadas
@@ -190,11 +193,10 @@ async def main():
         print(f"-> data/metrobus_lines.json: {estado_lines}")
 
         # -----------------------------------------------------------------
-        # GUARDAR: data/shapes/{line_code}.json
+        # ARCHIVO 3: data/metrobus_shapes.json (Consolidado único)
         # -----------------------------------------------------------------
-        print("3. Comprobando y extrayendo geometrías por línea...")
-        shapes_actualizados = 0
-        shapes_sin_cambios = 0
+        print("3. Extrayendo y consolidando geometrías por línea...")
+        todos_los_shapes = {}
 
         for linea in lineas_ordenadas:
             code = linea["line_code"]
@@ -204,6 +206,7 @@ async def main():
             if not r_id or not conc:
                 continue
 
+            # Consultar sentidos 0 y 1 concurrentemente para esta línea
             shape_tasks = [
                 fetch_shape_direction(session, sem, r_id, conc, 0),
                 fetch_shape_direction(session, sem, r_id, conc, 1)
@@ -216,16 +219,13 @@ async def main():
                     line_shapes[str(direction)] = encoded_str
 
             if line_shapes:
-                ruta_shape = f"data/shapes/{code}.json"
-                if guardar_json_si_cambia(ruta_shape, line_shapes):
-                    shapes_actualizados += 1
-                else:
-                    shapes_sin_cambios += 1
+                todos_los_shapes[code] = line_shapes
 
-        print(f"\nResumen final:")
-        print(f" • Paradas: {estado_stops}")
-        print(f" • Líneas: {estado_lines}")
-        print(f" • Shapes actualizados: {shapes_actualizados} | Sin cambios: {shapes_sin_cambios}")
+        shapes_actualizado = guardar_json_si_cambia("data/metrobus_shapes.json", todos_los_shapes)
+        estado_shapes = "ACTUALIZADO" if shapes_actualizado else "SIN CAMBIOS (omitido)"
+        print(f"-> data/metrobus_shapes.json: {estado_shapes} ({len(todos_los_shapes)} líneas incluidas)")
+
+        print("\nEjecución finalizada con éxito.")
 
 if __name__ == "__main__":
     asyncio.run(main())
