@@ -1,0 +1,712 @@
+{
+  "_descripcion_campos": {
+    "line_code": "Código comercial de la línea para matching en la app (ej. 170B).",
+    "route_id": "Identificador interno de la ruta en la API de Softour.",
+    "concesion": "Código oficial de la concesión administrativa (ej. CV102, CV106).",
+    "route_short_name": "Nombre corto oficial de la ruta.",
+    "route_long_name": "Descripción completa de la ruta y cabeceras de origen/destino."
+  },
+  "total_lines": 100,
+  "lines": [
+    {
+      "line_code": "106A",
+      "route_id": "106",
+      "concesion": "CV106",
+      "route_short_name": "106A",
+      "route_long_name": "Torrent - C.C. Bonaire - Aeroport"
+    },
+    {
+      "line_code": "106B",
+      "route_id": "1332",
+      "concesion": "CV106",
+      "route_short_name": "106B",
+      "route_long_name": "Torrent - C.C. Bonaire"
+    },
+    {
+      "line_code": "106C",
+      "route_id": "1333",
+      "concesion": "CV106",
+      "route_short_name": "106C",
+      "route_long_name": "Aeroport - Quart de Poblet"
+    },
+    {
+      "line_code": "110A",
+      "route_id": "133",
+      "concesion": "CV102",
+      "route_short_name": "110A",
+      "route_long_name": "Hospital de Sagunt - Alboraia"
+    },
+    {
+      "line_code": "110B",
+      "route_id": "1327",
+      "concesion": "CV102",
+      "route_short_name": "110B",
+      "route_long_name": "Hospital de Sagunt - Rafelbunyol - Alboraia"
+    },
+    {
+      "line_code": "111",
+      "route_id": "130",
+      "concesion": "CV102",
+      "route_short_name": "111",
+      "route_long_name": "Platja de Canet - Port de Sagunt - Sagunt - València"
+    },
+    {
+      "line_code": "112A",
+      "route_id": "1323",
+      "concesion": "CV102",
+      "route_short_name": "112A",
+      "route_long_name": "El Puig de Santamaria - Platges - València"
+    },
+    {
+      "line_code": "112B",
+      "route_id": "460",
+      "concesion": "CV102",
+      "route_short_name": "112B",
+      "route_long_name": "Port Saplatja - València"
+    },
+    {
+      "line_code": "113A",
+      "route_id": "116",
+      "concesion": "CV102",
+      "route_short_name": "113A",
+      "route_long_name": "La Vall d'Uixó - Sagunt (Sants de la Pedra) - València"
+    },
+    {
+      "line_code": "113B",
+      "route_id": "1328",
+      "concesion": "CV102",
+      "route_short_name": "113B",
+      "route_long_name": "La Vall d'Uixó - Sagunt - València"
+    },
+    {
+      "line_code": "114A",
+      "route_id": "453",
+      "concesion": "CV102",
+      "route_short_name": "114A",
+      "route_long_name": "Port de Sagunt - Sagunt - València (via V-21)"
+    },
+    {
+      "line_code": "114B",
+      "route_id": "456",
+      "concesion": "CV102",
+      "route_short_name": "114B",
+      "route_long_name": "Port de Sagunt - Sagunt - Massalfassar - València"
+    },
+    {
+      "line_code": "115",
+      "route_id": "1322",
+      "concesion": "CV102",
+      "route_short_name": "115",
+      "route_long_name": "Port de Sagunt - València"
+    },
+    {
+      "line_code": "116A",
+      "route_id": "454",
+      "concesion": "CV102",
+      "route_short_name": "116A",
+      "route_long_name": "Canet d'en Berenguer - Port de Sagunt - Sagunt - València (via V-21)"
+    },
+    {
+      "line_code": "116B",
+      "route_id": "455",
+      "concesion": "CV102",
+      "route_short_name": "116B",
+      "route_long_name": "Platja de Canet - Port de Sagunt - Sagunt - València (via V-21)"
+    },
+    {
+      "line_code": "116C",
+      "route_id": "457",
+      "concesion": "CV102",
+      "route_short_name": "116C",
+      "route_long_name": "Canet d'en Berenguer - Port de Sagunt - València"
+    },
+    {
+      "line_code": "116D",
+      "route_id": "1324",
+      "concesion": "CV102",
+      "route_short_name": "116D",
+      "route_long_name": "Platja de Canet - Port de Sagunt - València (via V-21)"
+    },
+    {
+      "line_code": "117N",
+      "route_id": "1325",
+      "concesion": "CV102",
+      "route_short_name": "117N",
+      "route_long_name": "Rafelbunyol - Puçol"
+    },
+    {
+      "line_code": "118N",
+      "route_id": "146",
+      "concesion": "CV102",
+      "route_short_name": "118N",
+      "route_long_name": "Port de Sagunt - Sagunt - València"
+    },
+    {
+      "line_code": "119N",
+      "route_id": "136",
+      "concesion": "CV102",
+      "route_short_name": "119N",
+      "route_long_name": "Puçol - València"
+    },
+    {
+      "line_code": "120",
+      "route_id": "120",
+      "concesion": "CV102",
+      "route_short_name": "120",
+      "route_long_name": "Port de Sagunt - Parc Sagunt - València"
+    },
+    {
+      "line_code": "130A",
+      "route_id": "206",
+      "concesion": "CV103",
+      "route_short_name": "130A",
+      "route_long_name": "Parc Tecnològic - Facultats - Metro Empalme"
+    },
+    {
+      "line_code": "130B",
+      "route_id": "355",
+      "concesion": "CV103",
+      "route_short_name": "130B",
+      "route_long_name": "Parc Tecnològic - Burjassot - Metro Empalme"
+    },
+    {
+      "line_code": "131",
+      "route_id": "207",
+      "concesion": "CV103",
+      "route_short_name": "131",
+      "route_long_name": "Mas Camarena - Facultats - València"
+    },
+    {
+      "line_code": "133A",
+      "route_id": "211",
+      "concesion": "CV103",
+      "route_short_name": "133A",
+      "route_long_name": "Serra - Nàquera - Bétera"
+    },
+    {
+      "line_code": "133B",
+      "route_id": "66",
+      "concesion": "CV103",
+      "route_short_name": "133B",
+      "route_long_name": "Hospital de Llíria - Bétera - Serra"
+    },
+    {
+      "line_code": "133N",
+      "route_id": "68",
+      "concesion": "CV103",
+      "route_short_name": "133N",
+      "route_long_name": "Serra - Nàquera - València"
+    },
+    {
+      "line_code": "134A",
+      "route_id": "212",
+      "concesion": "CV103",
+      "route_short_name": "134A",
+      "route_long_name": "Vilamarxant - Riba-roja de Túria"
+    },
+    {
+      "line_code": "134B",
+      "route_id": "352",
+      "concesion": "CV103",
+      "route_short_name": "134B",
+      "route_long_name": "Vilamarxant - Hospital de Llíria"
+    },
+    {
+      "line_code": "134N",
+      "route_id": "458",
+      "concesion": "CV103",
+      "route_short_name": "134N",
+      "route_long_name": "Vilamarxant - València"
+    },
+    {
+      "line_code": "135A",
+      "route_id": "459",
+      "concesion": "CV103",
+      "route_short_name": "135A",
+      "route_long_name": "Torre d'en Conill - València"
+    },
+    {
+      "line_code": "135B",
+      "route_id": "213",
+      "concesion": "CV103",
+      "route_short_name": "135B",
+      "route_long_name": "Base Militar Jaume I - Bétera - València"
+    },
+    {
+      "line_code": "136A",
+      "route_id": "463",
+      "concesion": "CV103",
+      "route_short_name": "136A",
+      "route_long_name": "Llíria - Campus de Tarongers"
+    },
+    {
+      "line_code": "136B",
+      "route_id": "464",
+      "concesion": "CV103",
+      "route_short_name": "136B",
+      "route_long_name": "L'Eliana - Campus de Tarongers"
+    },
+    {
+      "line_code": "136C",
+      "route_id": "467",
+      "concesion": "CV103",
+      "route_short_name": "136C",
+      "route_long_name": "Paterna - Campus de Tarongers"
+    },
+    {
+      "line_code": "140A",
+      "route_id": "208",
+      "concesion": "CV103",
+      "route_short_name": "140A",
+      "route_long_name": "El Plantio - Paterna - València"
+    },
+    {
+      "line_code": "140B",
+      "route_id": "354",
+      "concesion": "CV103",
+      "route_short_name": "140B",
+      "route_long_name": "Paterna - València"
+    },
+    {
+      "line_code": "140N",
+      "route_id": "465",
+      "concesion": "CV103",
+      "route_short_name": "140N",
+      "route_long_name": "La Canyada - Burjassot - València"
+    },
+    {
+      "line_code": "141",
+      "route_id": "51",
+      "concesion": "CV103",
+      "route_short_name": "141",
+      "route_long_name": "Valterna - València"
+    },
+    {
+      "line_code": "142A",
+      "route_id": "52",
+      "concesion": "CV103",
+      "route_short_name": "142A",
+      "route_long_name": "Paterna - Hospital La Fe"
+    },
+    {
+      "line_code": "142B",
+      "route_id": "53",
+      "concesion": "CV103",
+      "route_short_name": "142B",
+      "route_long_name": "Paterna - Centre d'Especialitats de Burjassot"
+    },
+    {
+      "line_code": "144A",
+      "route_id": "461",
+      "concesion": "CV103",
+      "route_short_name": "144A",
+      "route_long_name": "València - Parc Tecnològic - L'Andana"
+    },
+    {
+      "line_code": "144B",
+      "route_id": "1330",
+      "concesion": "CV103",
+      "route_short_name": "144B",
+      "route_long_name": "L'Andana - Parc Tecnològic - València"
+    },
+    {
+      "line_code": "145A",
+      "route_id": "209",
+      "concesion": "CV103",
+      "route_short_name": "145A",
+      "route_long_name": "Llíria - València"
+    },
+    {
+      "line_code": "145B",
+      "route_id": "353",
+      "concesion": "CV103",
+      "route_short_name": "145B",
+      "route_long_name": "Gestalgar - Llíria - València"
+    },
+    {
+      "line_code": "145C",
+      "route_id": "1336",
+      "concesion": "CV103",
+      "route_short_name": "145C",
+      "route_long_name": "Gestalgar - Llíria - València"
+    },
+    {
+      "line_code": "145N",
+      "route_id": "225",
+      "concesion": "CV103",
+      "route_short_name": "145N",
+      "route_long_name": "Llíria - València"
+    },
+    {
+      "line_code": "146A",
+      "route_id": "210",
+      "concesion": "CV103",
+      "route_short_name": "146A",
+      "route_long_name": "C.C. El Osito - L'Eliana - València"
+    },
+    {
+      "line_code": "146B",
+      "route_id": "525",
+      "concesion": "CV103",
+      "route_short_name": "146B",
+      "route_long_name": "Benaguasil - L'Eliana - València"
+    },
+    {
+      "line_code": "147",
+      "route_id": "462",
+      "concesion": "CV103",
+      "route_short_name": "147",
+      "route_long_name": "Fuente del Jarro - València"
+    },
+    {
+      "line_code": "150",
+      "route_id": "150",
+      "concesion": "CV106",
+      "route_short_name": "150",
+      "route_long_name": "Aeroport - Manises - València"
+    },
+    {
+      "line_code": "150N",
+      "route_id": "321",
+      "concesion": "CV106",
+      "route_short_name": "150N",
+      "route_long_name": "Aeroport - Manises - València"
+    },
+    {
+      "line_code": "153N",
+      "route_id": "519",
+      "concesion": "CV106",
+      "route_short_name": "153N",
+      "route_long_name": "Torrent - València"
+    },
+    {
+      "line_code": "160A",
+      "route_id": "160",
+      "concesion": "CV106",
+      "route_short_name": "160A",
+      "route_long_name": "C.C. Bonaire - València"
+    },
+    {
+      "line_code": "160B",
+      "route_id": "1334",
+      "concesion": "CV106",
+      "route_short_name": "160B",
+      "route_long_name": "Aldaia - València"
+    },
+    {
+      "line_code": "161",
+      "route_id": "135",
+      "concesion": "CV106",
+      "route_short_name": "161",
+      "route_long_name": "Quart de Poblet - València"
+    },
+    {
+      "line_code": "161C",
+      "route_id": "522",
+      "concesion": "CV106",
+      "route_short_name": "161C",
+      "route_long_name": "Xirivella - València"
+    },
+    {
+      "line_code": "161N",
+      "route_id": "520",
+      "concesion": "CV106",
+      "route_short_name": "161N",
+      "route_long_name": "Barri del Crist - València"
+    },
+    {
+      "line_code": "162A",
+      "route_id": "283",
+      "concesion": "CV106",
+      "route_short_name": "162A",
+      "route_long_name": "Aldaia (Av. Monestir de Poblet) - Quart de Poblet"
+    },
+    {
+      "line_code": "162B",
+      "route_id": "1338",
+      "concesion": "CV106",
+      "route_short_name": "162B",
+      "route_long_name": "Aldaia (C. Hernán Cortés) - Quart de Poblet"
+    },
+    {
+      "line_code": "162C",
+      "route_id": "1339",
+      "concesion": "CV106",
+      "route_short_name": "162C",
+      "route_long_name": "Aldaia (Av. Joan Fuster) - Metro Quart"
+    },
+    {
+      "line_code": "163A",
+      "route_id": "284",
+      "concesion": "CV106",
+      "route_short_name": "163A",
+      "route_long_name": "Alaquàs - València"
+    },
+    {
+      "line_code": "163B",
+      "route_id": "1331",
+      "concesion": "CV106",
+      "route_short_name": "163B",
+      "route_long_name": "Alaquàs - Metro Faitanar"
+    },
+    {
+      "line_code": "164",
+      "route_id": "285",
+      "concesion": "CV106",
+      "route_short_name": "164",
+      "route_long_name": "Xirivella - Metro Faitanar"
+    },
+    {
+      "line_code": "165",
+      "route_id": "286",
+      "concesion": "CV106",
+      "route_short_name": "165",
+      "route_long_name": "Quart de Poblet - Burjassot"
+    },
+    {
+      "line_code": "170A",
+      "route_id": "377",
+      "concesion": "CV106",
+      "route_short_name": "170A",
+      "route_long_name": "Calicanto - Torrent - València"
+    },
+    {
+      "line_code": "170B",
+      "route_id": "132",
+      "concesion": "CV106",
+      "route_short_name": "170B",
+      "route_long_name": "El Vedat - Torrent - València"
+    },
+    {
+      "line_code": "170C",
+      "route_id": "521",
+      "concesion": "CV106",
+      "route_short_name": "170C",
+      "route_long_name": "Torrent - València"
+    },
+    {
+      "line_code": "180",
+      "route_id": "77",
+      "concesion": "CV108",
+      "route_short_name": "180",
+      "route_long_name": "Albal - València"
+    },
+    {
+      "line_code": "181",
+      "route_id": "81",
+      "concesion": "CV108",
+      "route_short_name": "181",
+      "route_long_name": "Picassent - València"
+    },
+    {
+      "line_code": "182",
+      "route_id": "319",
+      "concesion": "CV108",
+      "route_short_name": "182",
+      "route_long_name": "Silla - València"
+    },
+    {
+      "line_code": "182N",
+      "route_id": "318",
+      "concesion": "CV108",
+      "route_short_name": "182N",
+      "route_long_name": "Picassent - Silla - València"
+    },
+    {
+      "line_code": "183",
+      "route_id": "320",
+      "concesion": "CV108",
+      "route_short_name": "183",
+      "route_long_name": "C.C. Alfafar - Sedaví - València"
+    },
+    {
+      "line_code": "184",
+      "route_id": "384",
+      "concesion": "CV108",
+      "route_short_name": "184",
+      "route_long_name": "Silla - Hospital La Fe"
+    },
+    {
+      "line_code": "186A",
+      "route_id": "79",
+      "concesion": "CV108",
+      "route_short_name": "186A",
+      "route_long_name": "Paiporta - Albal - Torrent"
+    },
+    {
+      "line_code": "186B",
+      "route_id": "383",
+      "concesion": "CV108",
+      "route_short_name": "186B",
+      "route_long_name": "Paiporta - Torrent - Albal"
+    },
+    {
+      "line_code": "187",
+      "route_id": "78",
+      "concesion": "CV108",
+      "route_short_name": "187",
+      "route_long_name": "Alcàsser - Silla"
+    },
+    {
+      "line_code": "188",
+      "route_id": "317",
+      "concesion": "CV108",
+      "route_short_name": "188",
+      "route_long_name": "El Mareny Blau - València"
+    },
+    {
+      "line_code": "190A",
+      "route_id": "500",
+      "concesion": "CV109",
+      "route_short_name": "190A",
+      "route_long_name": "Real - Torrent - València"
+    },
+    {
+      "line_code": "190B",
+      "route_id": "504",
+      "concesion": "CV109",
+      "route_short_name": "190B",
+      "route_long_name": "Real - Torrent"
+    },
+    {
+      "line_code": "191",
+      "route_id": "501",
+      "concesion": "CV109",
+      "route_short_name": "191",
+      "route_long_name": "Alfarb - València"
+    },
+    {
+      "line_code": "192A",
+      "route_id": "502",
+      "concesion": "CV109",
+      "route_short_name": "192A",
+      "route_long_name": "Millares - València"
+    },
+    {
+      "line_code": "192B",
+      "route_id": "170",
+      "concesion": "CV109",
+      "route_short_name": "192B",
+      "route_long_name": "Millares - Alfarb - València"
+    },
+    {
+      "line_code": "430A",
+      "route_id": "137",
+      "concesion": "CV107",
+      "route_short_name": "430A",
+      "route_long_name": "Turís - València"
+    },
+    {
+      "line_code": "430B",
+      "route_id": "345",
+      "concesion": "CV107",
+      "route_short_name": "430B",
+      "route_long_name": "Turís - Quart de Poblet - València"
+    },
+    {
+      "line_code": "431A",
+      "route_id": "267",
+      "concesion": "CV107",
+      "route_short_name": "431A",
+      "route_long_name": "Cheste - València"
+    },
+    {
+      "line_code": "431B",
+      "route_id": "344",
+      "concesion": "CV107",
+      "route_short_name": "431B",
+      "route_long_name": "Cheste - Urbanitzacions - València"
+    },
+    {
+      "line_code": "431C",
+      "route_id": "1342",
+      "concesion": "CV107",
+      "route_short_name": "431C",
+      "route_long_name": "Cheste - València (por Olimar)"
+    },
+    {
+      "line_code": "432A",
+      "route_id": "349",
+      "concesion": "CV107",
+      "route_short_name": "432A",
+      "route_long_name": "Yátova - Hospital de Manises - Aldaia"
+    },
+    {
+      "line_code": "432B",
+      "route_id": "385",
+      "concesion": "CV107",
+      "route_short_name": "432B",
+      "route_long_name": "Yátova - Loriguilla - Hospital de Manises - Aldaia"
+    },
+    {
+      "line_code": "433A",
+      "route_id": "287",
+      "concesion": "CV107",
+      "route_short_name": "433A",
+      "route_long_name": "Buñol - Hospital de Manises - Aldaia"
+    },
+    {
+      "line_code": "433B",
+      "route_id": "348",
+      "concesion": "CV107",
+      "route_short_name": "433B",
+      "route_long_name": "Godelleta - Buñol - Hospital de Manises - Aldaia"
+    },
+    {
+      "line_code": "435A",
+      "route_id": "138",
+      "concesion": "CV107",
+      "route_short_name": "435A",
+      "route_long_name": "Yátova - València"
+    },
+    {
+      "line_code": "435B",
+      "route_id": "346",
+      "concesion": "CV107",
+      "route_short_name": "435B",
+      "route_long_name": "Yátova - Cheste - València"
+    },
+    {
+      "line_code": "435C",
+      "route_id": "347",
+      "concesion": "CV107",
+      "route_short_name": "435C",
+      "route_long_name": "Yátova - Cheste - Urbanitzacions - València"
+    },
+    {
+      "line_code": "435E",
+      "route_id": "1343",
+      "concesion": "CV107",
+      "route_short_name": "435E",
+      "route_long_name": "Yátova - Cheste - València (por Olimar)"
+    },
+    {
+      "line_code": "435F",
+      "route_id": "1344",
+      "concesion": "CV107",
+      "route_short_name": "435F",
+      "route_long_name": "Yátova - València (C.E. Cheste)"
+    },
+    {
+      "line_code": "437",
+      "route_id": "351",
+      "concesion": "CV107",
+      "route_short_name": "437",
+      "route_long_name": "Cortes de Pallás - Buñol"
+    },
+    {
+      "line_code": "438A",
+      "route_id": "386",
+      "concesion": "CV107",
+      "route_short_name": "438A",
+      "route_long_name": "La Reva - L'Oliveral - ONU - València"
+    },
+    {
+      "line_code": "438B",
+      "route_id": "387",
+      "concesion": "CV107",
+      "route_short_name": "438B",
+      "route_long_name": "La Reva - L'Oliveral - València"
+    }
+  ]
+}
