@@ -1169,15 +1169,6 @@
     },
     {
       "lines": [
-        "182"
-      ],
-      "stop_id": "742",
-      "stop_lat": 39.46140601733998,
-      "stop_lon": -0.38547031581401825,
-      "stop_name": "Albacete - Mestre Sosa"
-    },
-    {
-      "lines": [
         "150",
         "150N",
         "160A",
@@ -1655,15 +1646,6 @@
       "stop_lat": 39.48345800859563,
       "stop_lon": -0.39478939938832003,
       "stop_name": "Pius XII (imparell) - Metro Campanar"
-    },
-    {
-      "lines": [
-        "182"
-      ],
-      "stop_id": "1783",
-      "stop_lat": 39.459744,
-      "stop_lon": -0.385979,
-      "stop_name": "Uruguai (imparell) - Jeroni Munyós"
     },
     {
       "lines": [
@@ -3372,7 +3354,7 @@
       "stop_id": "3111",
       "stop_lat": 39.417207,
       "stop_lon": -0.380802,
-      "stop_name": "Alcalde José Puertas 26"
+      "stop_name": "Alcalde José Puertes 26"
     },
     {
       "lines": [
@@ -10720,8 +10702,8 @@
         "183"
       ],
       "stop_id": "3856",
-      "stop_lat": 39.422963,
-      "stop_lon": -0.383775,
+      "stop_lat": 39.42291379115894,
+      "stop_lon": -0.383780364418036,
       "stop_name": "València 5"
     },
     {
@@ -10765,8 +10747,8 @@
         "183"
       ],
       "stop_id": "3861",
-      "stop_lat": 39.425202,
-      "stop_lon": -0.378127,
+      "stop_lat": 39.425151756797135,
+      "stop_lon": -0.3781544926423974,
       "stop_name": "Murta 1"
     },
     {
