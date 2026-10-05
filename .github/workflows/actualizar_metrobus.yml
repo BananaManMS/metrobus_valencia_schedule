@@ -2,13 +2,18 @@ name: Actualizar Metrobús
 
 on:
   schedule:
-    # 01:02 UTC los lunes (03:02 CEST / 02:02 CET)
-    - cron: '2 1 * * 1'
+    # 00:17 UTC los lunes (02:17 CEST / 01:17 CET)
+    - cron: '17 0 * * 1'
   workflow_dispatch:
+
+concurrency:
+  group: metrobus-update
+  cancel-in-progress: false
 
 jobs:
   scrape-metrobus:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
 
@@ -34,10 +39,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          
+
           if git diff --staged --quiet; then
             echo "Sin cambios en la red de Metrobús."
           else
             git commit -m "chore(metrobus): actualización semanal de paradas, líneas y polylines"
+            git pull --rebase
             git push
           fi
