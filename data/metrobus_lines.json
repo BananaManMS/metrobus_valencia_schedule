@@ -32,7 +32,7 @@
       "concesion": "CV102",
       "line_code": "110A",
       "route_id": "133",
-      "route_long_name": "Hospital de Sagunt - Alboraia",
+      "route_long_name": "Hospital de Sagunt - Sagunt - Alboraia",
       "route_short_name": "110A"
     },
     {
@@ -53,7 +53,7 @@
       "concesion": "CV102",
       "line_code": "112A",
       "route_id": "1323",
-      "route_long_name": "El Puig de Santamaria - Platges - València",
+      "route_long_name": "El Puig de Santa Maria - Platges - València",
       "route_short_name": "112A"
     },
     {
@@ -431,7 +431,7 @@
       "concesion": "CV106",
       "line_code": "162C",
       "route_id": "1339",
-      "route_long_name": "Aldaia (Av. Joan Fuster) - Metro Quart",
+      "route_long_name": "Barri del Crist - Quart de Poblet",
       "route_short_name": "162C"
     },
     {
