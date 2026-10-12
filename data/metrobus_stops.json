@@ -2539,8 +2539,8 @@
         "186A"
       ],
       "stop_id": "3030",
-      "stop_lat": 39.398305,
-      "stop_lon": -0.407214,
+      "stop_lat": 39.3982075838159,
+      "stop_lon": -0.4067016980781646,
       "stop_name": "Hernández Lázaro 3"
     },
     {
@@ -2781,8 +2781,8 @@
         "187"
       ],
       "stop_id": "3052",
-      "stop_lat": 39.366374,
-      "stop_lon": -0.439615,
+      "stop_lat": 39.36639162586771,
+      "stop_lon": -0.4392207152748151,
       "stop_name": "Antic Regne de València 15"
     },
     {
@@ -2792,8 +2792,8 @@
         "187"
       ],
       "stop_id": "3053",
-      "stop_lat": 39.366662,
-      "stop_lon": -0.434369,
+      "stop_lat": 39.36659979127609,
+      "stop_lon": -0.4350180945816051,
       "stop_name": "Antic Regne de València 12"
     },
     {
@@ -2841,8 +2841,8 @@
         "187"
       ],
       "stop_id": "3060",
-      "stop_lat": 39.36877690176124,
-      "stop_lon": -0.44027236507286016,
+      "stop_lat": 39.36834767343749,
+      "stop_lon": -0.440238837460174,
       "stop_name": "Corts Valencianes 72"
     },
     {
@@ -2980,8 +2980,8 @@
         "162A"
       ],
       "stop_id": "3074",
-      "stop_lat": 39.460842,
-      "stop_lon": -0.463548,
+      "stop_lat": 39.46084849084229,
+      "stop_lon": -0.46314003543102666,
       "stop_name": "Estación ADIF - Aldaia I"
     },
     {
@@ -3070,8 +3070,8 @@
         "160A"
       ],
       "stop_id": "3081",
-      "stop_lat": 39.470954,
-      "stop_lon": -0.468209,
+      "stop_lat": 39.47092644924756,
+      "stop_lon": -0.46782218787818186,
       "stop_name": "Ovidi Montllor 40"
     },
     {
@@ -3090,8 +3090,8 @@
         "106B"
       ],
       "stop_id": "3083",
-      "stop_lat": 39.47063819113873,
-      "stop_lon": -0.4643201458574864,
+      "stop_lat": 39.470636575301995,
+      "stop_lon": -0.46456531558184855,
       "stop_name": "Ovidi Montllor 3"
     },
     {
@@ -3267,8 +3267,8 @@
         "106A"
       ],
       "stop_id": "3099",
-      "stop_lat": 39.467646,
-      "stop_lon": -0.472858,
+      "stop_lat": 39.46707458682717,
+      "stop_lon": -0.47227680903848546,
       "stop_name": "Camí de la Lloma 24"
     },
     {
@@ -7296,8 +7296,8 @@
         "153N"
       ],
       "stop_id": "3494",
-      "stop_lat": 39.429586,
-      "stop_lon": -0.423844,
+      "stop_lat": 39.42943269006748,
+      "stop_lon": -0.42336388458633634,
       "stop_name": "Picanya 18"
     },
     {
@@ -7306,8 +7306,8 @@
         "186A"
       ],
       "stop_id": "3495",
-      "stop_lat": 39.4293653588014,
-      "stop_lon": -0.4226574563446128,
+      "stop_lat": 39.42938193288044,
+      "stop_lon": -0.42327838773156046,
       "stop_name": "Picanya 11"
     },
     {
@@ -7315,8 +7315,8 @@
         "186B"
       ],
       "stop_id": "3497",
-      "stop_lat": 39.432095880737705,
-      "stop_lon": -0.41804102635673246,
+      "stop_lat": 39.43199540423671,
+      "stop_lon": -0.4184071478872653,
       "stop_name": "Francesc Ciscar 1"
     },
     {
@@ -7333,8 +7333,8 @@
         "153N"
       ],
       "stop_id": "3499",
-      "stop_lat": 39.427418,
-      "stop_lon": -0.422192,
+      "stop_lat": 39.427705982110346,
+      "stop_lon": -0.42236232027245135,
       "stop_name": "San Antonio - Parroquia"
     },
     {
@@ -7360,8 +7360,8 @@
         "153N"
       ],
       "stop_id": "3502",
-      "stop_lat": 39.426614,
-      "stop_lon": -0.421997,
+      "stop_lat": 39.42599658837039,
+      "stop_lon": -0.42202113988113243,
       "stop_name": "Juan Rivera 13"
     },
     {
@@ -7387,8 +7387,8 @@
         "153N"
       ],
       "stop_id": "3505",
-      "stop_lat": 39.426358,
-      "stop_lon": -0.415033,
+      "stop_lat": 39.42614770695448,
+      "stop_lon": -0.4151738159732754,
       "stop_name": "Colombicultura 11"
     },
     {
@@ -7396,8 +7396,8 @@
         "153N"
       ],
       "stop_id": "3506",
-      "stop_lat": 39.424978,
-      "stop_lon": -0.416167,
+      "stop_lat": 39.42500804240674,
+      "stop_lon": -0.4164110810203514,
       "stop_name": "Maestro Serrano 25"
     },
     {
@@ -7405,8 +7405,8 @@
         "153N"
       ],
       "stop_id": "3507",
-      "stop_lat": 39.424912,
-      "stop_lon": -0.415936,
+      "stop_lat": 39.424936862705906,
+      "stop_lon": -0.41625518287278007,
       "stop_name": "Maestro Serrano 42"
     },
     {
@@ -7432,8 +7432,8 @@
         "153N"
       ],
       "stop_id": "3510",
-      "stop_lat": 39.427132,
-      "stop_lon": -0.408426,
+      "stop_lat": 39.42704083957315,
+      "stop_lon": -0.40741212499236124,
       "stop_name": "Ctra de Benetússer 43"
     },
     {
@@ -7450,8 +7450,8 @@
         "153N"
       ],
       "stop_id": "3512",
-      "stop_lat": 39.427095,
-      "stop_lon": -0.410779,
+      "stop_lat": 39.42707842537701,
+      "stop_lon": -0.4103257066764776,
       "stop_name": "Ctra de Benetússer 54"
     },
     {
@@ -7468,8 +7468,8 @@
         "153N"
       ],
       "stop_id": "3514",
-      "stop_lat": 39.427065,
-      "stop_lon": -0.408445,
+      "stop_lat": 39.42696037258125,
+      "stop_lon": -0.40743380720138944,
       "stop_name": "Ctra de Benetússer 66"
     },
     {
@@ -8660,8 +8660,8 @@
         "182N"
       ],
       "stop_id": "3659",
-      "stop_lat": 39.363968,
-      "stop_lon": -0.465673,
+      "stop_lat": 39.36399443971076,
+      "stop_lon": -0.46591037549781555,
       "stop_name": "Palleter 8"
     },
     {
@@ -10730,8 +10730,8 @@
         "183"
       ],
       "stop_id": "3862",
-      "stop_lat": 39.4269299784087,
-      "stop_lon": -0.3768536115314647,
+      "stop_lat": 39.42655083202357,
+      "stop_lon": -0.37711915022393905,
       "stop_name": "Murta 10"
     },
     {
@@ -10958,15 +10958,6 @@
     },
     {
       "lines": [
-        "187"
-      ],
-      "stop_id": "3886",
-      "stop_lat": 39.3667,
-      "stop_lon": -0.412947,
-      "stop_name": "Picassent - Massanassa"
-    },
-    {
-      "lines": [
         "182N"
       ],
       "stop_id": "3887",
@@ -11012,8 +11003,8 @@
         "187"
       ],
       "stop_id": "3892",
-      "stop_lat": 39.362401,
-      "stop_lon": -0.413372,
+      "stop_lat": 39.362825080530925,
+      "stop_lon": -0.4136630196781077,
       "stop_name": "San Rafael frente 4"
     },
     {
@@ -11060,8 +11051,8 @@
         "188"
       ],
       "stop_id": "3898",
-      "stop_lat": 39.27427,
-      "stop_lon": -0.277492,
+      "stop_lat": 39.27466658438056,
+      "stop_lon": -0.27771998776626283,
       "stop_name": "Ctra CV-500 - Camping"
     },
     {
@@ -11069,8 +11060,8 @@
         "188"
       ],
       "stop_id": "3899",
-      "stop_lat": 39.246486,
-      "stop_lon": -0.264955,
+      "stop_lat": 39.24618480723704,
+      "stop_lon": -0.26475785763739657,
       "stop_name": "Pl. de la Miraculosa 6"
     },
     {
@@ -11087,8 +11078,8 @@
         "188"
       ],
       "stop_id": "3901",
-      "stop_lat": 39.252414,
-      "stop_lon": -0.265038,
+      "stop_lat": 39.253142507974204,
+      "stop_lon": -0.26609948421764784,
       "stop_name": "Ctra CV-502 - Les Palmeres I"
     },
     {
@@ -11096,8 +11087,8 @@
         "188"
       ],
       "stop_id": "3902",
-      "stop_lat": 39.252579,
-      "stop_lon": -0.265069,
+      "stop_lat": 39.25312732758296,
+      "stop_lon": -0.26595412897490567,
       "stop_name": "Ctra CV-502 - Les Palmeres II"
     },
     {
@@ -11105,8 +11096,8 @@
         "188"
       ],
       "stop_id": "3903",
-      "stop_lat": 39.246544,
-      "stop_lon": -0.264924,
+      "stop_lat": 39.24634874431087,
+      "stop_lon": -0.264803300594334,
       "stop_name": "València 2"
     },
     {
@@ -11294,8 +11285,8 @@
         "153N"
       ],
       "stop_id": "3919",
-      "stop_lat": 39.441352,
-      "stop_lon": -0.459977,
+      "stop_lat": 39.44135349649919,
+      "stop_lon": -0.4602726055251094,
       "stop_name": "Picanya 12"
     },
     {
@@ -11631,8 +11622,8 @@
         "170A"
       ],
       "stop_id": "3949",
-      "stop_lat": 39.433605,
-      "stop_lon": -0.546315,
+      "stop_lat": 39.433567251195655,
+      "stop_lon": -0.5458657443523407,
       "stop_name": "Manuel Aznar 15"
     },
     {
@@ -11667,8 +11658,8 @@
         "170A"
       ],
       "stop_id": "3953",
-      "stop_lat": 39.427933995990074,
-      "stop_lon": -0.5929549978179471,
+      "stop_lat": 39.4279747657883,
+      "stop_lon": -0.5925991914053541,
       "stop_name": "Lluna 24"
     },
     {
@@ -11712,8 +11703,8 @@
         "170A"
       ],
       "stop_id": "3958",
-      "stop_lat": 39.428033,
-      "stop_lon": -0.592911,
+      "stop_lat": 39.4280721403894,
+      "stop_lon": -0.5923671803255659,
       "stop_name": "Lluna - Navarro Reverter"
     },
     {
@@ -11730,8 +11721,8 @@
         "170A"
       ],
       "stop_id": "3961",
-      "stop_lat": 39.429774,
-      "stop_lon": -0.595958,
+      "stop_lat": 39.43024870150762,
+      "stop_lon": -0.5964991151004173,
       "stop_name": "Paiporta 6"
     },
     {
@@ -11766,8 +11757,8 @@
         "170A"
       ],
       "stop_id": "3966",
-      "stop_lat": 39.432191,
-      "stop_lon": -0.600452,
+      "stop_lat": 39.43204225711734,
+      "stop_lon": -0.6000938834022862,
       "stop_name": "Paiporta 29"
     },
     {
@@ -11859,8 +11850,8 @@
         "170A"
       ],
       "stop_id": "3976",
-      "stop_lat": 39.438474,
-      "stop_lon": -0.481696,
+      "stop_lat": 39.438459933634654,
+      "stop_lon": -0.479625414303706,
       "stop_name": "Mas del Jutge 39"
     },
     {
@@ -11921,8 +11912,8 @@
         "170A"
       ],
       "stop_id": "3984",
-      "stop_lat": 39.438657,
-      "stop_lon": -0.481826,
+      "stop_lat": 39.43856972250203,
+      "stop_lon": -0.47936926334278374,
       "stop_name": "Mas del Jutge 10"
     },
     {
@@ -11943,8 +11934,8 @@
         "170A"
       ],
       "stop_id": "3989",
-      "stop_lat": 39.43925,
-      "stop_lon": -0.486981,
+      "stop_lat": 39.43911105852514,
+      "stop_lon": -0.48621363330415335,
       "stop_name": "Mas del Jutge 38"
     },
     {
@@ -11952,8 +11943,8 @@
         "170A"
       ],
       "stop_id": "3990",
-      "stop_lat": 39.439088,
-      "stop_lon": -0.487146,
+      "stop_lat": 39.43901059214157,
+      "stop_lon": -0.486284711843048,
       "stop_name": "Mas del Jutge 79"
     },
     {
@@ -12004,8 +11995,8 @@
         "170A"
       ],
       "stop_id": "3995",
-      "stop_lat": 39.439738,
-      "stop_lon": -0.495627,
+      "stop_lat": 39.43968618104834,
+      "stop_lon": -0.494843411407333,
       "stop_name": "Mas del Jutge 62"
     },
     {
@@ -12013,8 +12004,8 @@
         "170A"
       ],
       "stop_id": "3996",
-      "stop_lat": 39.439497,
-      "stop_lon": -0.495573,
+      "stop_lat": 39.439545322086296,
+      "stop_lon": -0.4948662101839596,
       "stop_name": "Mas del Jutge 119"
     },
     {
@@ -12428,8 +12419,8 @@
         "170C"
       ],
       "stop_id": "4030",
-      "stop_lat": 39.46253706040498,
-      "stop_lon": -0.44141805925546507,
+      "stop_lat": 39.46258143166487,
+      "stop_lon": -0.44174472986734603,
       "stop_name": "Tarongers 13"
     },
     {
@@ -12879,18 +12870,9 @@
         "183"
       ],
       "stop_id": "4072",
-      "stop_lat": 39.428035,
-      "stop_lon": -0.377601,
+      "stop_lat": 39.42856123513177,
+      "stop_lon": -0.37744274966811986,
       "stop_name": "Guadalquivir 75"
-    },
-    {
-      "lines": [
-        "183"
-      ],
-      "stop_id": "4073",
-      "stop_lat": 39.434379,
-      "stop_lon": -0.37685,
-      "stop_name": "Guadalquivir 1"
     },
     {
       "lines": [
@@ -12900,24 +12882,6 @@
       "stop_lat": 39.432143,
       "stop_lon": -0.376305,
       "stop_name": "Guadalquivir frente 34"
-    },
-    {
-      "lines": [
-        "183"
-      ],
-      "stop_id": "4075",
-      "stop_lat": 39.428077,
-      "stop_lon": -0.377767,
-      "stop_name": "Guadalquivir 80"
-    },
-    {
-      "lines": [
-        "183"
-      ],
-      "stop_id": "4076",
-      "stop_lat": 39.434413,
-      "stop_lon": -0.376932,
-      "stop_name": "Guadalquivir frente 1"
     },
     {
       "lines": [
@@ -12981,8 +12945,8 @@
         "186A"
       ],
       "stop_id": "4088",
-      "stop_lat": 39.400149,
-      "stop_lon": -0.415978,
+      "stop_lat": 39.40001842428043,
+      "stop_lon": -0.4154549692421017,
       "stop_name": "Hernández Lázaro frente 32"
     },
     {
@@ -13154,8 +13118,8 @@
         "186B"
       ],
       "stop_id": "4105",
-      "stop_lat": 39.391713080945806,
-      "stop_lon": -0.4031797202377341,
+      "stop_lat": 39.39158663520176,
+      "stop_lon": -0.40336747486877655,
       "stop_name": "Estación ADIF - Albal"
     },
     {
@@ -13221,8 +13185,8 @@
         "170A"
       ],
       "stop_id": "4114",
-      "stop_lat": 39.42729469005559,
-      "stop_lon": -0.5397746445546758,
+      "stop_lat": 39.42743997376665,
+      "stop_lon": -0.5394855263152465,
       "stop_name": "Tenerife 6"
     },
     {
@@ -13260,8 +13224,8 @@
         "150N"
       ],
       "stop_id": "4118",
-      "stop_lat": 39.49826218639698,
-      "stop_lon": -0.47202483118348404,
+      "stop_lat": 39.49836387563798,
+      "stop_lon": -0.4723014052243535,
       "stop_name": "Ceramista Alfonso Blat 37"
     },
     {
@@ -13327,6 +13291,15 @@
       "stop_lat": 39.59693131443086,
       "stop_lon": -0.6027332693338394,
       "stop_name": "Arch. Carlos frente 20"
+    },
+    {
+      "lines": [
+        "187"
+      ],
+      "stop_id": "4128",
+      "stop_lat": 39.366674444302824,
+      "stop_lon": -0.41294021740431397,
+      "stop_name": "Av de Jaume I 58A"
     },
     {
       "lines": [
