@@ -186,8 +186,15 @@
       "concesion": "CV103",
       "line_code": "133B",
       "route_id": "66",
-      "route_long_name": "Hospital de Llíria - Bétera - Serra",
+      "route_long_name": "Serra - Bétera - Hospital de Llíria",
       "route_short_name": "133B"
+    },
+    {
+      "concesion": "CV103",
+      "line_code": "133C",
+      "route_id": "1345",
+      "route_long_name": "Serra - Bétera - Hospital de Llíria (por Cumbres)",
+      "route_short_name": "133C"
     },
     {
       "concesion": "CV103",
@@ -708,5 +715,5 @@
       "route_short_name": "438B"
     }
   ],
-  "total_lines": 100
+  "total_lines": 101
 }
